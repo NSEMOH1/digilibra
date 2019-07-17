@@ -1,0 +1,270 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:wallet/app_icons.dart';
+import 'package:wallet/model/authentication_method.dart';
+import 'package:wallet/model/vault.dart';
+import 'package:wallet/styles.dart';
+import 'package:wallet/service_locator.dart';
+import 'package:wallet/util/biometrics.dart';
+import 'package:wallet/util/librautil.dart';
+import 'package:wallet/util/sharedprefsutil.dart';
+import 'package:wallet/util/caseconverter.dart';
+import 'package:wallet/ui/widgets/buttons.dart';
+import 'package:wallet/ui/widgets/security.dart';
+import 'package:wallet/appstate_container.dart';
+import 'package:wallet/localization.dart';
+import 'package:wallet/dimens.dart';
+import 'package:wallet/ui/util/routes.dart';
+
+class AppLockScreen extends StatefulWidget {
+  @override
+  _AppLockScreenState createState() => _AppLockScreenState();
+}
+
+class _AppLockScreenState extends State<AppLockScreen> {
+  bool _showUnlockButton = false;
+  bool _showLock = false;
+  bool _lockedOut = true;
+  String _countDownTxt = '';
+
+  Future<void> _goHome() async {
+    if (StateContainer.of(context).wallet != null) {
+    } else {
+      await LibraUtil.loginAccount(context);
+    }
+    Navigator.of(context).pushNamedAndRemoveUntil(
+        '/home_transition', (Route<dynamic> route) => false);
+  }
+
+  Widget _buildPinScreen(BuildContext context, String expectedPin) {
+    return PinScreen(
+      PinOverlayType.ENTER_PIN,
+      (pin) {
+        _goHome();
+      },
+      expectedPin: expectedPin,
+      description: AppLocalization.of(context).unlockPin,
+    );
+  }
+
+  String _formatCountDisplay(int count) {
+    if (count <= 60) {
+      // Seconds only
+      String secondsStr = count.toString();
+      if (count < 10) {
+        secondsStr = '0' + secondsStr;
+      }
+      return '00:' + secondsStr;
+    } else if (count > 60 && count <= 3600) {
+      // Minutes:Seconds
+      String minutesStr = '';
+      int minutes = count ~/ 60;
+      if (minutes < 10) {
+        minutesStr = '0' + minutes.toString();
+      } else {
+        minutesStr = minutes.toString();
+      }
+      String secondsStr = '';
+      int seconds = count % 60;
+      if (seconds < 10) {
+        secondsStr = '0' + seconds.toString();
+      } else {
+        secondsStr = seconds.toString();
+      }
+      return minutesStr + ':' + secondsStr;
+    } else {
+      // Hours:Minutes:Seconds
+      String hoursStr = '';
+      int hours = count ~/ 3600;
+      if (hours < 10) {
+        hoursStr = '0' + hours.toString();
+      } else {
+        hoursStr = hours.toString();
+      }
+      count = count % 3600;
+      String minutesStr = '';
+      int minutes = count ~/ 60;
+      if (minutes < 10) {
+        minutesStr = '0' + minutes.toString();
+      } else {
+        minutesStr = minutes.toString();
+      }
+      String secondsStr = '';
+      int seconds = count % 60;
+      if (seconds < 10) {
+        secondsStr = '0' + seconds.toString();
+      } else {
+        secondsStr = seconds.toString();
+      }
+      return hoursStr + ':' + minutesStr + ':' + secondsStr;
+    }
+  }
+
+  Future<void> _runCountdown(int count) async {
+    if (count >= 1) {
+      if (mounted) {
+        setState(() {
+          _showUnlockButton = true;
+          _showLock = true;
+          _lockedOut = true;
+          _countDownTxt = _formatCountDisplay(count);
+        });
+      }
+      Future.delayed(Duration(seconds: 1), () {
+        _runCountdown(count - 1);
+      });
+    } else {
+      if (mounted) {
+        setState(() {
+          _lockedOut = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _authenticate({bool transitions = false}) async {
+    // Test if user is locked out
+    // Get duration of lockout
+    DateTime lockUntil = await sl.get<SharedPrefsUtil>().getLockDate();
+    if (lockUntil == null) {
+      await sl.get<SharedPrefsUtil>().resetLockAttempts();
+    } else {
+      int countDown = lockUntil.difference(DateTime.now().toUtc()).inSeconds;
+      // They're not allowed to attempt
+      if (countDown > 0) {
+        _runCountdown(countDown);
+        return;
+      }
+    }
+    setState(() {
+      _lockedOut = false;
+    });
+    sl.get<SharedPrefsUtil>().getAuthMethod().then((authMethod) {
+      sl.get<BiometricUtil>().hasBiometrics().then((hasBiometrics) {
+        if (authMethod.method == AuthMethod.BIOMETRICS && hasBiometrics) {
+          setState(() {
+            _showLock = true;
+            _showUnlockButton = true;
+          });
+          sl
+              .get<BiometricUtil>()
+              .authenticateWithBiometrics(
+                  context, AppLocalization.of(context).unlockBiometrics)
+              .then((authenticated) {
+            if (authenticated) {
+              _goHome();
+            } else {
+              setState(() {
+                _showUnlockButton = true;
+              });
+            }
+          });
+        } else {
+          // PIN Authentication
+          sl.get<Vault>().getPin().then((expectedPin) {
+            if (transitions) {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (BuildContext context) {
+                  return _buildPinScreen(context, expectedPin);
+                }),
+              );
+            } else {
+              Navigator.of(context).push(
+                NoPushTransitionRoute(builder: (BuildContext context) {
+                  return _buildPinScreen(context, expectedPin);
+                }),
+              );
+            }
+            Future.delayed(Duration(milliseconds: 200), () {
+              if (mounted) {
+                setState(() {
+                  _showUnlockButton = true;
+                  _showLock = true;
+                });
+              }
+            });
+          });
+        }
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _authenticate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: Container(
+            color: StateContainer.of(context).curTheme.background,
+            width: double.infinity,
+            child: SafeArea(
+              minimum: EdgeInsets.only(
+                bottom: MediaQuery.of(context).size.height * 0.035,
+                top: MediaQuery.of(context).size.height * 0.1,
+              ),
+              child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: _showLock
+                        ? Column(
+                            children: <Widget>[
+                              Container(
+                                child: Icon(
+                                  AppIcons.lock,
+                                  size: 80,
+                                  color: StateContainer.of(context)
+                                      .curTheme
+                                      .primary,
+                                ),
+                              ),
+                              Container(
+                                child: Text(
+                                  CaseChange.toUpperCase(
+                                      AppLocalization.of(context).locked,
+                                      context),
+                                  style:
+                                      AppStyles.textStyleHeaderColored(context),
+                                ),
+                                margin: EdgeInsets.only(top: 10),
+                              ),
+                            ],
+                          )
+                        : SizedBox(),
+                  ),
+                  _lockedOut
+                      ? Container(
+                          width: MediaQuery.of(context).size.width - 100,
+                          margin: EdgeInsets.symmetric(horizontal: 50),
+                          child: Text(
+                            AppLocalization.of(context).tooManyFailedAttempts,
+                            style: AppStyles.textStyleErrorMedium(context),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : SizedBox(),
+                  _showUnlockButton
+                      ? Row(
+                          children: <Widget>[
+                            AppButton.buildAppButton(
+                                context,
+                                AppButtonType.PRIMARY,
+                                _lockedOut
+                                    ? _countDownTxt
+                                    : AppLocalization.of(context).unlock,
+                                Dimens.BUTTON_BOTTOM_DIMENS, onPressed: () {
+                              if (!_lockedOut) {
+                                _authenticate(transitions: true);
+                              }
+                            }, disabled: _lockedOut),
+                          ],
+                        )
+                      : SizedBox(),
+                ],
+              ),
+            )));
+  }
+}
