@@ -869,11 +869,11 @@ class AppLocalization {
 
   /// -- NON-TRANSLATABLE ITEMS
   String getExplorerUrl(String version) {
-    return 'https://librabrowser.io/version/$version';
+    return 'https://libexplorer.com/version/$version';
   }
 
   String getAccountExplorerUrl(String account) {
-    return 'https://librabrowser.io/account/$account';
+    return 'https://libexplorer.com/address/$account';
   }
 
   String getAvatarDownloadUrl(String account) {
