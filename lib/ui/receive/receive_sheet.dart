@@ -199,7 +199,7 @@ class AppReceiveSheet {
                               Dimens.BUTTON_BOTTOM_DIMENS,
                               disabled: _showShareCard, onPressed: () {
                             String receiveCardFileName =
-                                '${StateContainer.of(context).wallet.address}.png';
+                                'shared_${StateContainer.of(context).wallet.address}.png';
                             getApplicationDocumentsDirectory()
                                 .then((directory) {
                               String filePath =

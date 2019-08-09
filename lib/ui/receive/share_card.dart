@@ -214,7 +214,7 @@ class _AppShareCardState extends State<AppShareCard> {
                     width: 97,
                     margin: EdgeInsets.only(bottom: 12),
                     child: AutoSizeText(
-                      '\$LIBRA      LIBRA.CC',
+                      '\$LIBRA      LIBRA.ORG',
                       minFontSize: 1.0,
                       stepGranularity: 0.1,
                       maxLines: 1,
