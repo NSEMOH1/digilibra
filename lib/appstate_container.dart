@@ -112,6 +112,7 @@ class StateContainerState extends State<StateContainer> {
 // Subscriptions
   StreamSubscription<AccountStateEvent> _stateSub;
   StreamSubscription<HistoryEvent> _historyEventSub;
+  StreamSubscription<AccountModifiedEvent> _accountModifiedSub;
 
   // Register RX event listenerss
   void _registerBus() {
@@ -121,7 +122,6 @@ class StateContainerState extends State<StateContainer> {
         .listen((event) {
       String address =
           LibraHelpers.byteToHex(event.libraAccountState.authenticationKey);
-      print('receive AccountStateEvent: $address');
       BigInt balance = event.libraAccountState.balance;
       if (address == wallet.address) {
         setState(() {
@@ -152,6 +152,52 @@ class StateContainerState extends State<StateContainer> {
         EventTaxiImpl.singleton().fire(HistoryHomeEvent(items: wallet.history));
       });
     });
+
+    // Account has been deleted or name changed
+    _accountModifiedSub = EventTaxiImpl.singleton()
+        .registerTo<AccountModifiedEvent>()
+        .listen((event) {
+      if (!event.deleted) {
+        if (event.account.index == selectedAccount.index) {
+          setState(() {
+            selectedAccount.name = event.account.name;
+          });
+        } else {
+          updateRecentlyUsedAccounts();
+        }
+      } else {
+        // Remove account
+        updateRecentlyUsedAccounts().then((_) {
+          if (event.account.index == selectedAccount.index &&
+              recentLast != null) {
+            sl.get<DBHelper>().changeAccount(recentLast);
+            setState(() {
+              selectedAccount = recentLast;
+            });
+            EventTaxiImpl.singleton()
+                .fire(AccountChangedEvent(account: recentLast, noPop: true));
+          } else if (event.account.index == selectedAccount.index &&
+              recentSecondLast != null) {
+            sl.get<DBHelper>().changeAccount(recentSecondLast);
+            setState(() {
+              selectedAccount = recentSecondLast;
+            });
+            EventTaxiImpl.singleton().fire(
+                AccountChangedEvent(account: recentSecondLast, noPop: true));
+          } else if (event.account.index == selectedAccount.index) {
+            sl.get<DBHelper>().getMainAccount().then((mainAccount) {
+              sl.get<DBHelper>().changeAccount(mainAccount);
+              setState(() {
+                selectedAccount = mainAccount;
+              });
+              EventTaxiImpl.singleton()
+                  .fire(AccountChangedEvent(account: mainAccount, noPop: true));
+            });
+          }
+        });
+        updateRecentlyUsedAccounts();
+      }
+    });
   }
 
   @override
@@ -166,6 +212,9 @@ class StateContainerState extends State<StateContainer> {
     }
     if (_historyEventSub != null) {
       _historyEventSub.cancel();
+    }
+    if (_accountModifiedSub != null) {
+      _accountModifiedSub.cancel();
     }
   }
 
@@ -184,7 +233,6 @@ class StateContainerState extends State<StateContainer> {
   }
 
   Future<TransactionsResponse> updateTnxs(String address) async {
-    print('fetching tnx for: $address');
     var resp = await fetchTnxs(address);
     EventTaxiImpl.singleton().fire(HistoryEvent(response: resp));
     return resp;
