@@ -88,13 +88,10 @@ class _IntroWelcomePageState extends State<IntroWelcomePage> {
                             .setSeed(Entropy.generateEntropy())
                             .then((result) {
                           // Update wallet
-                          LibraUtil.seedToAddressInIsolate(result)
-                              .then((address) {
-                            LibraUtil.loginAccount(context, address).then((_) {
+                          LibraUtil.loginAccount(context, result).then((_) {
                               Navigator.of(context)
                                   .pushNamed('/intro_backup_safety');
                             });
-                          });
                         });
                       }),
                     ],

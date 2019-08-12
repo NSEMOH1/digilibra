@@ -57,11 +57,14 @@ class LibraUtil {
         LibraUtil.seedToAddress, {'seed': seed, 'index': index});
   }
 
-  static Future<void> loginAccount(BuildContext context, String address) async {
+  static Future<void> loginAccount(BuildContext context, String seed) async {
     Account selectedAcct = await sl.get<DBHelper>().getSelectedAccount();
     if (selectedAcct == null) {
+      int defaultIndex = 0;
+      String address =
+          await LibraUtil.seedToAddressInIsolate(seed, index: defaultIndex);
       selectedAcct = Account(
-          index: 0,
+          index: defaultIndex,
           lastAccess: 0,
           name: AppLocalization.of(context).defaultAccountName,
           selected: true,

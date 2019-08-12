@@ -668,9 +668,7 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                     .setSeed(_seedInputController.text)
                                     .then((result) {
                                   sl.get<DBHelper>().dropAccounts().then((_) {
-                                    LibraUtil.seedToAddressInIsolate(result)
-                                        .then((address) {
-                                      LibraUtil.loginAccount(context, address)
+                                    LibraUtil.loginAccount(context, result)
                                           .then((_) {
                                         Navigator.of(context).push(
                                             MaterialPageRoute(builder:
@@ -680,7 +678,6 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                               (_pinEnteredCallback));
                                         }));
                                       });
-                                    });
                                   });
                                 });
                               });
@@ -705,9 +702,7 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                         _mnemonicController.text.split(' ')))
                                     .then((result) {
                                   sl.get<DBHelper>().dropAccounts().then((_) {
-                                    LibraUtil.seedToAddressInIsolate(result)
-                                        .then((address) {
-                                      LibraUtil.loginAccount(context, address)
+                                    LibraUtil.loginAccount(context, result)
                                           .then((_) {
                                         Navigator.of(context).push(
                                             MaterialPageRoute(builder:
@@ -717,7 +712,6 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                               (_pinEnteredCallback));
                                         }));
                                       });
-                                    });
                                   });
                                 });
                               });

@@ -220,16 +220,12 @@ class StateContainerState extends State<StateContainer> {
 
   // Update the global wallet instance with a new address
   Future<void> updateWallet({Account account}) async {
-    String seed = await sl.get<Vault>().getSeed();
-    String address = await LibraUtil.seedToAddressInIsolate(seed);
-    account.address = address;
-    selectedAccount = account;
     setState(() {
-      wallet = AppWallet(address: address, loading: true);
+      selectedAccount = account;
+      wallet = AppWallet(address: account.address, loading: true);
     });
     await updateRecentlyUsedAccounts();
-    await updateTnxs(address);
-    await updateAccountStates();
+    await requestUpdate(account.address);
   }
 
   Future<TransactionsResponse> updateTnxs(String address) async {
@@ -313,23 +309,6 @@ class StateContainerState extends State<StateContainer> {
     _locked = false;
   }
 
-  // Update accounts states from db
-  Future<void> updateAccountStates() async {
-    List<Account> accounts = await sl.get<DBHelper>().getAccounts();
-    List<String> addresses = [];
-    accounts.forEach((account) {
-      if (account != null && account.address != null) {
-        addresses.add(account.address);
-      }
-    });
-    List<LibraAccountState> states = await LibraUtil.getStates(addresses);
-    states.forEach((s) {
-      if (s.balance != wallet.accountBalance) {
-        EventTaxiImpl.singleton().fire(AccountStateEvent(s));
-      }
-    });
-  }
-
   // Request update accounts
   Future<void> requestAccountsStates(List<String> addresses) async {
     List<LibraAccountState> states = await LibraUtil.getStates(addresses);
@@ -378,9 +357,25 @@ class StateContainerState extends State<StateContainer> {
     }
   }
 
+  /// Request accounts states from db
+  Future<void> _requestAccountStates() async {
+    List<Account> accounts = await sl.get<DBHelper>().getAccounts();
+    List<String> addressToRequest = List();
+    accounts.forEach((account) {
+      if (account.address != null) {
+        addressToRequest.add(account.address);
+      }
+    });
+    List<LibraAccountState> states =
+        await LibraUtil.getStates(addressToRequest);
+    states.forEach((s) {
+      EventTaxiImpl.singleton().fire(AccountStateEvent(s));
+    });
+  }
+
   Future<void> requestUpdate(String address) async {
     await updateTnxs(address);
-    await updateAccountStates();
+    await _requestAccountStates();
   }
 
   void logOut() {

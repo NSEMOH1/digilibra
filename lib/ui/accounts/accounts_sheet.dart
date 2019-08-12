@@ -78,7 +78,6 @@ class _AppAccountsWidgetState extends State<AppAccountsWidget> {
           String address = LibraHelpers.byteToHex(s.authenticationKey);
           String balance = s.balance.toString();
           if (account.address == address && balance != account.balance) {
-            sl.get<DBHelper>().updateAccountBalance(address, balance);
             setState(() {
               account.balance = balance;
             });

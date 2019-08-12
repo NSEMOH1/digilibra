@@ -146,7 +146,8 @@ class _SettingsSheetState extends State<SettingsSheet>
     _transferConfirmSub = EventTaxiImpl.singleton()
         .registerTo<TransferConfirmEvent>()
         .listen((event) {
-      AppTransferConfirmSheet(event.libraAccountStateMap, event.libraAccountMap, transferError)
+      AppTransferConfirmSheet(
+              event.libraAccountStateMap, event.libraAccountMap, transferError)
           .mainBottomSheet(context);
     });
     // Ready to go to transfer complete
@@ -617,18 +618,16 @@ class _SettingsSheetState extends State<SettingsSheet>
                                           color: Colors.transparent,
                                           child: FlatButton(
                                             onPressed: () {
+                                              var account =
+                                                  StateContainer.of(context)
+                                                      .recentLast;
                                               sl
                                                   .get<DBHelper>()
-                                                  .changeAccount(
-                                                      StateContainer.of(context)
-                                                          .recentLast)
+                                                  .changeAccount(account)
                                                   .then((_) {
                                                 EventTaxiImpl.singleton().fire(
                                                     AccountChangedEvent(
-                                                        account:
-                                                            StateContainer.of(
-                                                                    context)
-                                                                .recentLast,
+                                                        account: account,
                                                         delayPop: true));
                                               });
                                             },
