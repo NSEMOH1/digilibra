@@ -32,9 +32,11 @@ class _AvatarWidgetState extends State<AvatarWidget> {
           .get<UIUtil>()
           .downloadOrRetrieveAvatar(context, widget.address);
       if (await FileUtil().pngHasValidSignature(avatarF)) {
-        setState(() {
-          avatarFile = avatarF;
-        });
+        if (mounted) {
+          setState(() {
+            avatarFile = avatarF;
+          });
+        }
       }
     }
   }
