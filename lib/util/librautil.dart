@@ -9,7 +9,7 @@ import 'package:wallet/appstate_container.dart';
 import 'package:wallet/localization.dart';
 
 class LibraUtil {
-  static LibraAccount seedToAccount(Map<dynamic, dynamic> params) {
+  static LibraAccount _seedToAccount(Map<dynamic, dynamic> params) {
     int index = params['index'];
     assert(index >= 0);
     String seed = params['seed'];
@@ -21,25 +21,10 @@ class LibraUtil {
   static Future<LibraAccount> seedToAccountInIsolate(
       String seed, int index) async {
     return await compute(
-        LibraUtil.seedToAccount, {'seed': seed, 'index': index});
+        LibraUtil._seedToAccount, {'seed': seed, 'index': index});
   }
 
-  static String seedToPrivate(Map<dynamic, dynamic> params) {
-    int index = params['index'];
-    assert(index >= 0);
-    String seed = params['seed'];
-    String mnemonic = Mnemonic.entropyToMnemonic(seed).join(' ');
-    LibraWallet libraWallet = new LibraWallet(mnemonic: mnemonic);
-    LibraAccount libraAccount = libraWallet.generateAccount(index);
-    return LibraHelpers.byteToHex(libraAccount.keyPair.getPrivateKey());
-  }
-
-  static Future<String> seedToPrivateInIsolate(String seed, int index) async {
-    return await compute(
-        LibraUtil.seedToPrivate, {'seed': seed, 'index': index});
-  }
-
-  static String seedToAddress(Map<dynamic, dynamic> params) {
+  static String _seedToAddress(Map<dynamic, dynamic> params) {
     int index = params['index'];
     assert(index >= 0);
     String seed = params['seed'];
@@ -54,7 +39,7 @@ class LibraUtil {
       index = 0;
     }
     return await compute(
-        LibraUtil.seedToAddress, {'seed': seed, 'index': index});
+        LibraUtil._seedToAddress, {'seed': seed, 'index': index});
   }
 
   static Future<void> loginAccount(BuildContext context, String seed) async {
@@ -75,16 +60,19 @@ class LibraUtil {
   }
 
   static Future<List<LibraAccountState>> _getStates(
-      Map<String, List<String>> params) async {
+      Map<dynamic, dynamic> params) async {
+    String addressVal = params['addresses'];
+    List<String> addresses = addressVal.split(';');
     LibraClient client = new LibraClient();
-    return await client.getAccountStates(params['addresses']);
+    return await client.getAccountStates(addresses);
   }
 
-  static Future<List<LibraAccountState>> getStates(
+  static Future<List<LibraAccountState>> getStatesInIsolate(
       List<String> addresses) async {
     if (addresses.length <= 0) {
       return [];
     }
-    return await compute(_getStates, {'addresses': addresses});
+    String addressVal = addresses.join(';');
+    return await compute(LibraUtil._getStates, {'addresses': addressVal});
   }
 }

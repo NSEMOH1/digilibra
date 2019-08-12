@@ -311,7 +311,7 @@ class StateContainerState extends State<StateContainer> {
 
   // Request update accounts
   Future<void> requestAccountsStates(List<String> addresses) async {
-    List<LibraAccountState> states = await LibraUtil.getStates(addresses);
+    List<LibraAccountState> states = await LibraUtil.getStatesInIsolate(addresses);
     EventTaxiImpl.singleton().fire(AccountsStatesEvent(states));
   }
 
@@ -367,7 +367,7 @@ class StateContainerState extends State<StateContainer> {
       }
     });
     List<LibraAccountState> states =
-        await LibraUtil.getStates(addressToRequest);
+        await LibraUtil.getStatesInIsolate(addressToRequest);
     states.forEach((s) {
       EventTaxiImpl.singleton().fire(AccountStateEvent(s));
     });
