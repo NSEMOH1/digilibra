@@ -36,6 +36,7 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
   bool _seedIsValid = false;
   bool _showSeedError = false;
   bool _mnemonicIsValid = false;
+  bool _isInserting = false;
   String _mnemonicError;
 
   @override
@@ -654,6 +655,12 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                         splashColor:
                             StateContainer.of(context).curTheme.primary30,
                         onPressed: () {
+                          if (_isInserting) {
+                            return;
+                          }
+                          setState(() {
+                            _isInserting = true;
+                          });
                           if (_seedMode) {
                             _seedInputFocusNode.unfocus();
                             // If seed valid, log them in
@@ -669,15 +676,21 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                     .then((result) {
                                   sl.get<DBHelper>().dropAccounts().then((_) {
                                     LibraUtil.loginAccount(context, result)
-                                          .then((_) {
-                                        Navigator.of(context).push(
-                                            MaterialPageRoute(builder:
-                                                (BuildContext context) {
-                                          return PinScreen(
-                                              PinOverlayType.NEW_PIN,
-                                              (_pinEnteredCallback));
-                                        }));
+                                        .then((_) {
+                                      setState(() {
+                                        _isInserting = false;
                                       });
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (BuildContext context) {
+                                        return PinScreen(PinOverlayType.NEW_PIN,
+                                            (_pinEnteredCallback));
+                                      }));
+                                    }).catchError((onError) {
+                                      setState(() {
+                                        _isInserting = false;
+                                      });
+                                    });
                                   });
                                 });
                               });
@@ -685,6 +698,7 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                               // Display error
                               setState(() {
                                 _showSeedError = true;
+                                _isInserting = false;
                               });
                             }
                           } else {
@@ -703,15 +717,21 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                     .then((result) {
                                   sl.get<DBHelper>().dropAccounts().then((_) {
                                     LibraUtil.loginAccount(context, result)
-                                          .then((_) {
-                                        Navigator.of(context).push(
-                                            MaterialPageRoute(builder:
-                                                (BuildContext context) {
-                                          return PinScreen(
-                                              PinOverlayType.NEW_PIN,
-                                              (_pinEnteredCallback));
-                                        }));
+                                        .then((_) {
+                                      setState(() {
+                                        _isInserting = false;
                                       });
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (BuildContext context) {
+                                        return PinScreen(PinOverlayType.NEW_PIN,
+                                            (_pinEnteredCallback));
+                                      }));
+                                    }).catchError((onError) {
+                                      setState(() {
+                                        _isInserting = false;
+                                      });
+                                    });
                                   });
                                 });
                               });

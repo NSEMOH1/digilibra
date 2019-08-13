@@ -18,6 +18,7 @@ class IntroWelcomePage extends StatefulWidget {
 
 class _IntroWelcomePageState extends State<IntroWelcomePage> {
   var _scaffoldKey = new GlobalKey<ScaffoldState>();
+  bool _isInserting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -83,15 +84,28 @@ class _IntroWelcomePageState extends State<IntroWelcomePage> {
                           AppButtonType.PRIMARY,
                           AppLocalization.of(context).newWallet,
                           Dimens.BUTTON_TOP_DIMENS, onPressed: () {
+                        if (_isInserting) {
+                          return;
+                        }
+                        setState(() {
+                          _isInserting = true;
+                        });
                         sl
                             .get<Vault>()
                             .setSeed(Entropy.generateEntropy())
                             .then((result) {
                           // Update wallet
                           LibraUtil.loginAccount(context, result).then((_) {
-                              Navigator.of(context)
-                                  .pushNamed('/intro_backup_safety');
+                            setState(() {
+                              _isInserting = false;
                             });
+                            Navigator.of(context)
+                                .pushNamed('/intro_backup_safety');
+                          }).catchError((onError) {
+                            setState(() {
+                              _isInserting = false;
+                            });
+                          });
                         });
                       }),
                     ],

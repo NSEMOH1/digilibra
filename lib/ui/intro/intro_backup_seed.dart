@@ -24,6 +24,7 @@ class _IntroBackupSeedState extends State<IntroBackupSeedPage> {
   String _seed;
   List<String> _mnemonic;
   bool _showMnemonic;
+  bool _isInserting = false;
 
   @override
   void initState() {
@@ -163,12 +164,25 @@ class _IntroBackupSeedState extends State<IntroBackupSeedPage> {
                     AppLocalization.of(context).backupConfirmButton,
                     Dimens.BUTTON_BOTTOM_DIMENS,
                     onPressed: () {
+                      if (_isInserting) {
+                        return;
+                      }
+                      setState(() {
+                        _isInserting = true;
+                      });
                       // Update wallet
                       sl.get<DBHelper>().dropAccounts().then((_) {
-                         LibraUtil.loginAccount(context, _seed).then((_) {
-                            Navigator.of(context)
-                                .pushNamed('/intro_backup_confirm');
+                        LibraUtil.loginAccount(context, _seed).then((_) {
+                          setState(() {
+                            _isInserting = false;
                           });
+                          Navigator.of(context)
+                              .pushNamed('/intro_backup_confirm');
+                        }).catchError((onError) {
+                          setState(() {
+                            _isInserting = false;
+                          });
+                        });
                       });
                     },
                   ),

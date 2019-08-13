@@ -10,23 +10,24 @@ import 'package:wallet/model/db/contact.dart';
 import 'package:wallet/util/librautil.dart';
 
 class DBHelper {
-  static const int DB_VERSION = 3;
-  static const String CONTACTS_SQL = """CREATE TABLE Contacts( 
+  static const int DB_VERSION = 2;
+  static const String CONTACTS_SQL = '''CREATE TABLE Contacts( 
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT, 
-        address TEXT, 
-        avatar_path TEXT)""";
-  static const String ACCOUNTS_SQL = """CREATE TABLE Accounts( 
+        address TEXT,
+        avatar_path TEXT,
+        UNIQUE (address) ON CONFLICT IGNORE);
+        ''';
+  static const String ACCOUNTS_SQL = '''CREATE TABLE Accounts( 
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT, 
         acct_index INTEGER, 
         selected INTEGER, 
         last_accessed INTEGER,
         private_key TEXT,
-        balance TEXT)""";
-  static const String ACCOUNTS_ADD_ACCOUNT_COLUMN_SQL = """
-    ALTER TABLE Accounts ADD address TEXT
-    """;
+        balance TEXT,
+        address TEXT,
+        UNIQUE (address) ON CONFLICT IGNORE)''';
   static Database _db;
 
   DBHelper();
@@ -49,16 +50,12 @@ class DBHelper {
     // When creating the db, create the tables
     await db.execute(CONTACTS_SQL);
     await db.execute(ACCOUNTS_SQL);
-    await db.execute(ACCOUNTS_ADD_ACCOUNT_COLUMN_SQL);
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion == 1) {
       // Add accounts table
       await db.execute(ACCOUNTS_SQL);
-      await db.execute(ACCOUNTS_ADD_ACCOUNT_COLUMN_SQL);
-    } else if (oldVersion == 2) {
-      await db.execute(ACCOUNTS_ADD_ACCOUNT_COLUMN_SQL);
     }
   }
 
