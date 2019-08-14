@@ -10,6 +10,7 @@ import 'package:wallet/ui/widgets/auto_resize_text.dart';
 import 'package:wallet/ui/widgets/buttons.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:wallet/util/librautil.dart';
+import 'package:wallet/model/db/appdb.dart';
 
 class IntroWelcomePage extends StatefulWidget {
   @override
@@ -47,13 +48,17 @@ class _IntroWelcomePageState extends State<IntroWelcomePage> {
                       child: Stack(
                         children: <Widget>[
                           Center(
-                            child: FlareActor(
-                              'assets/welcome_animation.flr',
-                              animation: 'main',
-                              fit: BoxFit.contain,
-                              color:
-                                  StateContainer.of(context).curTheme.primary,
-                            ),
+                            child: _isInserting
+                                ? FlareActor('assets/placeholder_animation.flr',
+                                    animation: 'main', fit: BoxFit.contain)
+                                : FlareActor(
+                                    'assets/welcome_animation.flr',
+                                    animation: 'main',
+                                    fit: BoxFit.contain,
+                                    color: StateContainer.of(context)
+                                        .curTheme
+                                        .primary,
+                                  ),
                           )
                         ],
                       ),
@@ -95,15 +100,17 @@ class _IntroWelcomePageState extends State<IntroWelcomePage> {
                             .setSeed(Entropy.generateEntropy())
                             .then((result) {
                           // Update wallet
-                          LibraUtil.loginAccount(context, result).then((_) {
-                            setState(() {
-                              _isInserting = false;
-                            });
-                            Navigator.of(context)
-                                .pushNamed('/intro_backup_safety');
-                          }).catchError((onError) {
-                            setState(() {
-                              _isInserting = false;
+                          sl.get<DBHelper>().dropAccounts().then((_) {
+                            LibraUtil.loginAccount(context, result).then((_) {
+                              setState(() {
+                                _isInserting = false;
+                              });
+                              Navigator.of(context)
+                                  .pushNamed('/intro_backup_safety');
+                            }).catchError((onError) {
+                              setState(() {
+                                _isInserting = false;
+                              });
                             });
                           });
                         });

@@ -6,12 +6,10 @@ import 'package:wallet/dimens.dart';
 import 'package:wallet/localization.dart';
 import 'package:wallet/service_locator.dart';
 import 'package:wallet/styles.dart';
-import 'package:wallet/model/db/appdb.dart';
 import 'package:wallet/model/vault.dart';
 import 'package:wallet/ui/widgets/auto_resize_text.dart';
 import 'package:wallet/ui/widgets/buttons.dart';
 import 'package:wallet/ui/widgets/plainseed_display.dart';
-import 'package:wallet/util/librautil.dart';
 import 'package:wallet/ui/widgets/mnemonic_display.dart';
 
 class IntroBackupSeedPage extends StatefulWidget {
@@ -24,7 +22,6 @@ class _IntroBackupSeedState extends State<IntroBackupSeedPage> {
   String _seed;
   List<String> _mnemonic;
   bool _showMnemonic;
-  bool _isInserting = false;
 
   @override
   void initState() {
@@ -164,26 +161,7 @@ class _IntroBackupSeedState extends State<IntroBackupSeedPage> {
                     AppLocalization.of(context).backupConfirmButton,
                     Dimens.BUTTON_BOTTOM_DIMENS,
                     onPressed: () {
-                      if (_isInserting) {
-                        return;
-                      }
-                      setState(() {
-                        _isInserting = true;
-                      });
-                      // Update wallet
-                      sl.get<DBHelper>().dropAccounts().then((_) {
-                        LibraUtil.loginAccount(context, _seed).then((_) {
-                          setState(() {
-                            _isInserting = false;
-                          });
-                          Navigator.of(context)
-                              .pushNamed('/intro_backup_confirm');
-                        }).catchError((onError) {
-                          setState(() {
-                            _isInserting = false;
-                          });
-                        });
-                      });
+                      Navigator.of(context).pushNamed('/intro_backup_confirm');
                     },
                   ),
                 ],
