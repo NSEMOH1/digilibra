@@ -217,12 +217,20 @@ class _AppHomePageState extends State<AppHomePage>
     _historySub = EventTaxiImpl.singleton()
         .registerTo<HistoryHomeEvent>()
         .listen((event) {
-      diffAndUpdateHistoryList(event.items);
+      if (event.items == null ||
+          event.items.length == 0 ||
+          _historyListMap[StateContainer.of(context).wallet.address] == null)
+        return;
       setState(() {
+        _historyListMap[StateContainer.of(context).wallet.address] =
+            ListModel<TransactionResponseItem>(
+          listKey: _listKeyMap[StateContainer.of(context).wallet.address],
+          initialItems: event.items,
+        );
+
         _isRefreshing = false;
       });
     });
-
     _sendCompleteSub = EventTaxiImpl.singleton()
         .registerTo<SendCompleteEvent>()
         .listen((event) {
@@ -472,35 +480,15 @@ class _AppHomePageState extends State<AppHomePage>
       _isRefreshing = true;
     });
     sl.get<HapticUtil>().success();
+    String address = StateContainer.of(context).wallet.address;
+    if (address != null) {
+      StateContainer.of(context).requestUpdate(address);
+    }
     // Hide refresh indicator after 3 seconds if no server response
     Future.delayed(new Duration(seconds: 3), () {
       setState(() {
         _isRefreshing = false;
       });
-    });
-  }
-
-  void diffAndUpdateHistoryList(List<TransactionResponseItem> newList) {
-    if (newList == null ||
-        newList.length == 0 ||
-        _historyListMap[StateContainer.of(context).wallet.address] == null)
-      return;
-    /*
-    newList
-        .where((item) => !_historyListMap[StateContainer.of(context).wallet.address].items.contains(item))
-        .forEach((historyItem) {
-      setState(() {
-        _historyListMap[StateContainer.of(context).wallet.address].insertAtTop(historyItem);
-      });
-    });
-    */
-    setState(() {
-      _historyListMap.update(
-          StateContainer.of(context).wallet.address,
-          (data) => data = ListModel<TransactionResponseItem>(
-                listKey: _listKeyMap[StateContainer.of(context).wallet.address],
-                initialItems: StateContainer.of(context).wallet.history,
-              ));
     });
   }
 

@@ -1,27 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:event_taxi/event_taxi.dart';
+import 'package:flutter_libra_core/flutter_libra_core.dart';
 import 'package:wallet/appstate_container.dart';
 import 'package:wallet/localization.dart';
 import 'package:wallet/dimens.dart';
 import 'package:wallet/service_locator.dart';
 import 'package:wallet/bus/events.dart';
-import 'package:wallet/model/vault.dart';
-import 'package:wallet/network/model/response/account_state_item.dart';
 import 'package:wallet/ui/widgets/auto_resize_text.dart';
 import 'package:wallet/ui/widgets/sheets.dart';
 import 'package:wallet/ui/widgets/buttons.dart';
 import 'package:wallet/ui/widgets/dialog.dart';
 import 'package:wallet/util/numberutil.dart';
-import 'package:wallet/util/librautil.dart';
 import 'package:wallet/util/caseconverter.dart';
 import 'package:wallet/styles.dart';
 
 class AppTransferConfirmSheet {
-  // accounts to private keys/account balances
-  Map<String, AccountStateItem> privKeyBalanceMap;
+  Map<String, LibraAccountState> libraAccountStateMap = Map();
+  Map<String, LibraAccount> libraAccountMap = Map();
+
   // accounts that have all been pocketed and ready to send
-  Map<String, AccountStateItem> readyToSendMap = Map();
+  Map<String, LibraAccountState> readyToSendMap = Map();
   // Total amount there is to transfer
   BigInt totalToTransfer = BigInt.zero;
   String totalAsReadableAmount = '';
@@ -34,7 +33,8 @@ class AppTransferConfirmSheet {
 
   Function errorCallback;
 
-  AppTransferConfirmSheet(this.privKeyBalanceMap, this.errorCallback) {}
+  AppTransferConfirmSheet(
+      this.libraAccountStateMap, this.libraAccountMap, this.errorCallback);
 
   StreamSubscription<TransferProcessEvent> _processSub;
   StreamSubscription<TransferErrorEvent> _errorSub;
@@ -55,21 +55,18 @@ class AppTransferConfirmSheet {
     StateContainer.of(context).lockCallback();
     // See how much we have to transfer and separate accounts with pendings
     List<String> accountsToRemove = List();
-    privKeyBalanceMap
-        .forEach((String account, AccountStateItem accountBalanceItem) {
-      totalToTransfer += BigInt.parse(accountBalanceItem.balance) +
-          BigInt.parse(accountBalanceItem.pending);
-      if (BigInt.parse(accountBalanceItem.pending) == BigInt.zero &&
-          BigInt.parse(accountBalanceItem.balance) > BigInt.zero) {
-        readyToSendMap.putIfAbsent(account, () => accountBalanceItem);
-        accountsToRemove.add(account);
-      } else if (BigInt.parse(accountBalanceItem.pending) == BigInt.zero &&
-          BigInt.parse(accountBalanceItem.balance) == BigInt.zero) {
-        accountsToRemove.add(account);
+    libraAccountStateMap
+        .forEach((String address, LibraAccountState accoutState) {
+      totalToTransfer += accoutState.balance;
+      if (accoutState.balance > BigInt.zero) {
+        readyToSendMap.putIfAbsent(address, () => accoutState);
+        accountsToRemove.add(address);
+      } else if (accoutState.balance == BigInt.zero) {
+        accountsToRemove.add(address);
       }
     });
     accountsToRemove.forEach((account) {
-      privKeyBalanceMap.remove(account);
+      libraAccountStateMap.remove(account);
     });
     totalAsReadableAmount =
         sl.get<NumberUtil>().getRawAsUsableString(totalToTransfer.toString());
@@ -77,24 +74,25 @@ class AppTransferConfirmSheet {
     // Process response
     _processSub = EventTaxiImpl.singleton()
         .registerTo<TransferProcessEvent>()
-        .listen((processResponse) {
-      
+        .listen((event) {
+      LibraAccountState updated = event.libraAccountState;
+      String address = LibraHelpers.byteToHex(updated.authenticationKey);
       // A paper wallet account
-      AccountStateItem balItem =
-          privKeyBalanceMap.remove(processResponse.account);
-      if (balItem != null) {
-        balItem.balance = processResponse.balance;
-        privKeyBalanceMap[processResponse.account] = balItem;
+      LibraAccountState libraAccountState =
+          libraAccountStateMap.remove(address);
+      if (libraAccountState != null) {
+        libraAccountStateMap[address] = event.libraAccountState;
         // Process next item
       } else {
-        balItem = readyToSendMap.remove(processResponse.account);
-        if (balItem == null) {
+        libraAccountState = readyToSendMap.remove(event.libraAccountState);
+        if (libraAccountState == null) {
           errorCallback();
         }
-        totalTransferred += BigInt.parse(balItem.balance);
+        totalTransferred += libraAccountState.balance;
         startProcessing(context);
       }
     });
+
     // Error response
     _errorSub = EventTaxiImpl.singleton()
         .registerTo<TransferErrorEvent>()
@@ -104,6 +102,7 @@ class AppTransferConfirmSheet {
       }
       errorCallback();
     });
+
     AppSheets.showAppHeightNineSheet(
         context: context,
         onDisposed: _onWillPop,
@@ -239,21 +238,26 @@ class AppTransferConfirmSheet {
         });
   }
 
-  Future<String> _getPrivKey(int index) async {
-    String seed = await sl.get<Vault>().getSeed();
-    return await LibraUtil.seedToPrivateInIsolate(seed, index);
-  }
-
-
   void startProcessing(BuildContext context) {
-    if (privKeyBalanceMap.length > 0) {
+    if (libraAccountStateMap.length > 0) {
+      //String account = libraAccountStateMap.keys.first;
+      //print('account: $account');
+      String address = StateContainer.of(context).wallet.address;
+      StateContainer.of(context).updateTnxs(address);
     } else if (readyToSendMap.length > 0) {
       // Start requesting sends
       String account = readyToSendMap.keys.first;
-      AccountStateItem balItem = readyToSendMap[account];
-    } else if (!finished) {
-      finished = true;
+      LibraAccountState libraAccountState = readyToSendMap[account];
+      LibraAccount libraAccount = libraAccountMap[account];
+      String privKey =
+          LibraHelpers.byteToHex(libraAccount.keyPair.getPrivateKey());
+      StateContainer.of(context).requestReceive(
+          StateContainer.of(context).wallet.address,
+          libraAccountState.balance.toString(),
+          privKey,
+          needRefresh: readyToSendMap.length == 1);
     } else {
+      finished = true;
       EventTaxiImpl.singleton()
           .fire(TransferCompleteEvent(amount: totalToTransfer));
       if (animationOpen) {

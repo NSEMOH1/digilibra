@@ -165,10 +165,13 @@ class _IntroBackupSeedState extends State<IntroBackupSeedPage> {
                     onPressed: () {
                       // Update wallet
                       sl.get<DBHelper>().dropAccounts().then((_) {
-                        LibraUtil.loginAccount(context).then((_) {
-                          Navigator.of(context)
-                              .pushNamed('/intro_backup_confirm');
+                        LibraUtil.seedToAddressInIsolate(_seed).then((address) {
+                          LibraUtil.loginAccount(context, address).then((_) {
+                            Navigator.of(context)
+                                .pushNamed('/intro_backup_confirm');
+                          });
                         });
+          
                       });
                     },
                   ),

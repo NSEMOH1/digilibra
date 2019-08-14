@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_libra_core/flutter_libra_core.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:event_taxi/event_taxi.dart';
 import 'package:wallet/bus/events.dart';
@@ -49,6 +50,7 @@ class _AppAccountsWidgetState extends State<AppAccountsWidget> {
   bool _addingAccount;
   ScrollController _scrollController = new ScrollController();
 
+  StreamSubscription<AccountsStatesEvent> _stateSub;
   StreamSubscription<AccountModifiedEvent> _accountModifiedSub;
   bool _accountIsChanging;
 
@@ -67,6 +69,23 @@ class _AppAccountsWidgetState extends State<AppAccountsWidget> {
   }
 
   void _registerBus() {
+    _stateSub = EventTaxiImpl.singleton()
+        .registerTo<AccountsStatesEvent>()
+        .listen((event) {
+      // Handle accounts states event
+      widget.accounts.forEach((account) {
+        event.libraAccountsStates.forEach((s) {
+          String address = LibraHelpers.byteToHex(s.authenticationKey);
+          String balance = s.balance.toString();
+          if (account.address == address && balance != account.balance) {
+            sl.get<DBHelper>().updateAccountBalance(address, balance);
+            setState(() {
+              account.balance = balance;
+            });
+          }
+        });
+      });
+    });
     _accountModifiedSub = EventTaxiImpl.singleton()
         .registerTo<AccountModifiedEvent>()
         .listen((event) {
@@ -99,6 +118,9 @@ class _AppAccountsWidgetState extends State<AppAccountsWidget> {
   }
 
   void _destroyBus() {
+    if (_stateSub != null) {
+      _stateSub.cancel();
+    }
     if (_accountModifiedSub != null) {
       _accountModifiedSub.cancel();
     }
@@ -106,13 +128,13 @@ class _AppAccountsWidgetState extends State<AppAccountsWidget> {
 
   Future<void> _requestBalances(
       BuildContext context, List<Account> accounts) async {
-    List<String> addresses = List();
+    List<String> addresses = [];
     accounts.forEach((account) {
-      if (account.address != null) {
+      if (account != null && account.address != null) {
         addresses.add(account.address);
       }
     });
-    //StateContainer.of(context).requestAccountsStates(addresses);
+    StateContainer.of(context).requestAccountsStates(addresses);
   }
 
   Future<void> _changeAccount(Account account, StateSetter setState) async {

@@ -119,16 +119,27 @@ class StateContainerState extends State<StateContainer> {
     _stateSub = EventTaxiImpl.singleton()
         .registerTo<AccountStateEvent>()
         .listen((event) {
-      var state = event.libraAccountState;
-      var authenticationKey = LibraHelpers.byteToHex(state.authenticationKey);
-      if (authenticationKey == wallet.address) {
+      String address =
+          LibraHelpers.byteToHex(event.libraAccountState.authenticationKey);
+      print('receive AccountStateEvent: $address');
+      BigInt balance = event.libraAccountState.balance;
+      if (address == wallet.address) {
         setState(() {
-          wallet.accountBalance = BigInt.from(state.balance);
+          wallet.accountBalance = balance;
           wallet.loading = false;
           wallet.localCurrencyPrice = '1';
           wallet.btcPrice = '1';
         });
       }
+
+      sl.get<DBHelper>().getAccount(address).then((account) {
+        if (account != null &&
+            account.address != null &&
+            address == account.address &&
+            balance.toString() != account.balance) {
+          sl.get<DBHelper>().updateAccountBalance(address, balance.toString());
+        }
+      });
     });
 
     _historyEventSub =
@@ -145,14 +156,23 @@ class StateContainerState extends State<StateContainer> {
 
   @override
   void dispose() {
+    _destroyBus();
     super.dispose();
+  }
+
+  void _destroyBus() {
+    if (_stateSub != null) {
+      _stateSub.cancel();
+    }
+    if (_historyEventSub != null) {
+      _historyEventSub.cancel();
+    }
   }
 
   // Update the global wallet instance with a new address
   Future<void> updateWallet({Account account}) async {
     String seed = await sl.get<Vault>().getSeed();
-    String address =
-        await LibraUtil.seedToAddressInIsolate(seed, account.index);
+    String address = await LibraUtil.seedToAddressInIsolate(seed);
     account.address = address;
     selectedAccount = account;
     setState(() {
@@ -160,12 +180,14 @@ class StateContainerState extends State<StateContainer> {
     });
     await updateRecentlyUsedAccounts();
     await updateTnxs(address);
-    await updateBalances();
+    await updateAccountStates();
   }
 
-  Future<void> updateTnxs(String address) async {
+  Future<TransactionsResponse> updateTnxs(String address) async {
+    print('fetching tnx for: $address');
     var resp = await fetchTnxs(address);
     EventTaxiImpl.singleton().fire(HistoryEvent(response: resp));
+    return resp;
   }
 
   static Future<TransactionsResponse> _fetchTnxs(
@@ -243,27 +265,75 @@ class StateContainerState extends State<StateContainer> {
     _locked = false;
   }
 
+  // Update accounts states from db
+  Future<void> updateAccountStates() async {
+    List<Account> accounts = await sl.get<DBHelper>().getAccounts();
+    List<String> addresses = [];
+    accounts.forEach((account) {
+      if (account != null && account.address != null) {
+        addresses.add(account.address);
+      }
+    });
+    List<LibraAccountState> states = await LibraUtil.getStates(addresses);
+    states.forEach((s) {
+      if (s.balance != wallet.accountBalance) {
+        EventTaxiImpl.singleton().fire(AccountStateEvent(s));
+      }
+    });
+  }
+
+  // Request update accounts
+  Future<void> requestAccountsStates(List<String> addresses) async {
+    List<LibraAccountState> states = await LibraUtil.getStates(addresses);
+    EventTaxiImpl.singleton().fire(AccountsStatesEvent(states));
+  }
+
   /// Create a tnx send request
-  Future<void> requestSend(String to, String amount) async {
-    String seed = await sl.get<Vault>().getSeed();
+  Future<void> requestSend(String to, String amount,
+      {needRefresh = true, String privKey}) async {
+    var seed = await sl.get<Vault>().getSeed();
     var list = Mnemonic.entropyToMnemonic(seed);
     LibraWallet libraWallet = new LibraWallet(mnemonic: list.join(' '));
-    LibraAccount libraAccount = libraWallet.generateAccount(0);
+    LibraAccount libraAccount =
+        libraWallet.generateAccount(selectedAccount.index);
     LibraClient client = new LibraClient();
-    await client.transferCoins(libraAccount, to, int.parse(amount));
+    var res = await client.transferCoins(libraAccount, to, int.parse(amount));
+    // TODO check res.vmStatus, fire TransferErrorEvent
     String from = libraAccount.getAddress();
     LibraAccountState fromState = await client.getAccountState(from);
-    fromState = await client.getAccountState(from);
-    //print('after balance: ${fromState.balance}, sq: ${fromState.sequenceNumber}');
     EventTaxiImpl.singleton()
         .fire(SendCompleteEvent(from: from, to: to, amount: amount));
     EventTaxiImpl.singleton().fire(AccountStateEvent(fromState));
-    await updateTnxs(from);
+    var tnxRes = await updateTnxs(from);
+    if (tnxRes.result.length > 0) {
+      EventTaxiImpl.singleton().fire(TransferProcessEvent(fromState));
+    }
   }
 
-  /// Create a tnx receive request
-  Future<void> requestReceive(String previous, String source, String balance,
-      {String privKey, String account}) async {}
+  Future<void> requestReceive(String to, String amount, String privKey,
+      {needRefresh = true}) async {
+    LibraAccount libraAccount =
+        LibraAccount.fromPrivateKey(LibraHelpers.hexToBytes(privKey));
+    LibraClient client = new LibraClient();
+    var res = await client.transferCoins(libraAccount, to, int.parse(amount));
+    // TODO check res.vmStatus, fire TransferErrorEvent
+    String from = libraAccount.getAddress();
+    LibraAccountState toState = await client.getAccountState(to);
+    EventTaxiImpl.singleton()
+        .fire(SendCompleteEvent(from: from, to: to, amount: amount));
+    EventTaxiImpl.singleton().fire(AccountStateEvent(toState));
+    if (needRefresh) {
+      var tnxRes = await updateTnxs(to); // update current account tnxs
+      if (tnxRes.result.length > 0) {
+        EventTaxiImpl.singleton().fire(TransferProcessEvent(toState));
+      }
+    }
+  }
+
+  Future<void> requestUpdate(String address) async {
+    await updateTnxs(address);
+    await updateAccountStates();
+  }
 
   void logOut() {
     setState(() {
@@ -280,28 +350,5 @@ class StateContainerState extends State<StateContainer> {
       data: this,
       child: widget.child,
     );
-  }
-
-  // Update accounts states from local db
-  Future<void> updateBalances() async {
-    sl.get<DBHelper>().getAccounts().then((accounts) {
-      accounts.forEach((account) async {
-        LibraAccountState libraAccountState = await getState(account.address);
-        if (BigInt.from(libraAccountState.balance) != wallet.accountBalance) {
-          EventTaxiImpl.singleton().fire(AccountStateEvent(libraAccountState));
-        }
-        sl.get<DBHelper>().updateAccountBalance(
-            account, libraAccountState.balance.toString());
-      });
-    });
-  }
-
-  static Future<LibraAccountState> _getState(Map<String, String> params) async {
-    LibraClient client = new LibraClient();
-    return await client.getAccountState(params['address']);
-  }
-
-  Future<LibraAccountState> getState(String address) async {
-    return await compute(_getState, {'address': address});
   }
 }

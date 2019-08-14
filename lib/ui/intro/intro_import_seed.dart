@@ -668,13 +668,18 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                     .setSeed(_seedInputController.text)
                                     .then((result) {
                                   sl.get<DBHelper>().dropAccounts().then((_) {
-                                    LibraUtil.loginAccount(context).then((_) {
-                                      Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                              builder: (BuildContext context) {
-                                        return PinScreen(PinOverlayType.NEW_PIN,
-                                            (_pinEnteredCallback));
-                                      }));
+                                    LibraUtil.seedToAddressInIsolate(result)
+                                        .then((address) {
+                                      LibraUtil.loginAccount(context, address)
+                                          .then((_) {
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(builder:
+                                                (BuildContext context) {
+                                          return PinScreen(
+                                              PinOverlayType.NEW_PIN,
+                                              (_pinEnteredCallback));
+                                        }));
+                                      });
                                     });
                                   });
                                 });
@@ -700,13 +705,18 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                         _mnemonicController.text.split(' ')))
                                     .then((result) {
                                   sl.get<DBHelper>().dropAccounts().then((_) {
-                                    LibraUtil.loginAccount(context).then((_) {
-                                      Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                              builder: (BuildContext context) {
-                                        return PinScreen(PinOverlayType.NEW_PIN,
-                                            (_pinEnteredCallback));
-                                      }));
+                                    LibraUtil.seedToAddressInIsolate(result)
+                                        .then((address) {
+                                      LibraUtil.loginAccount(context, address)
+                                          .then((_) {
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(builder:
+                                                (BuildContext context) {
+                                          return PinScreen(
+                                              PinOverlayType.NEW_PIN,
+                                              (_pinEnteredCallback));
+                                        }));
+                                      });
                                     });
                                   });
                                 });

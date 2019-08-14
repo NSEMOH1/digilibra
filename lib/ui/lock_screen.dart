@@ -30,7 +30,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
   Future<void> _goHome() async {
     if (StateContainer.of(context).wallet != null) {
     } else {
-      await LibraUtil.loginAccount(context);
+      String seed = await sl.get<Vault>().getSeed();
+      String address = await LibraUtil.seedToAddressInIsolate(seed);
+      await LibraUtil.loginAccount(context, address);
     }
     Navigator.of(context).pushNamedAndRemoveUntil(
         '/home_transition', (Route<dynamic> route) => false);

@@ -9,7 +9,6 @@ import 'package:wallet/localization.dart';
 import 'package:wallet/dimens.dart';
 import 'package:wallet/appstate_container.dart';
 import 'package:wallet/bus/events.dart';
-import 'package:wallet/network/model/response/account_state_item.dart';
 import 'package:wallet/ui/transfer/transfer_manual_entry_sheet.dart';
 import 'package:wallet/ui/widgets/auto_resize_text.dart';
 import 'package:wallet/ui/widgets/sheets.dart';
@@ -21,59 +20,55 @@ import 'package:wallet/util/caseconverter.dart';
 import 'package:wallet/util/librautil.dart';
 
 class AppTransferOverviewSheet {
-  static const int NUM_SWEEP = 15; // Number of accounts to sweep from a seed
+  static const int NUM_SWEEP = 4; // Number of accounts to sweep from a seed
 
-  // accounts to private keys/account balances
-  Map<String, AccountStateItem> privKeyBalanceMap = Map();
+  Map<String, LibraAccountState> libraAccountStateMap = Map();
+  Map<String, LibraAccount> libraAccountMap = Map();
 
   bool _animationOpen = false;
 
-  StreamSubscription<AccountStateEvent> _balancesSub;
+  StreamSubscription<AccountsStatesEvent> _stateSub;
 
   Future<bool> _onWillPop() async {
-    if (_balancesSub != null) {
-      _balancesSub.cancel();
+    if (_stateSub != null) {
+      _stateSub.cancel();
     }
     return true;
   }
 
-  AppTransferOverviewSheet() {}
-
   mainBottomSheet(BuildContext context) {
-    // Handle accounts balances response
-    _balancesSub = EventTaxiImpl.singleton()
-        .registerTo<AccountStateEvent>()
+    // Handle accounts states change
+    _stateSub = EventTaxiImpl.singleton()
+        .registerTo<AccountsStatesEvent>()
         .listen((event) {
       if (_animationOpen) {
         Navigator.of(context).pop();
       }
-      List<String> accountsToRemove = List();
-      /*
-      event.response.balances
-          .forEach((String account, AccountStateItem balItem) {
-        BigInt balance = BigInt.parse(balItem.balance);
-        BigInt pending = BigInt.parse(balItem.pending);
-        if (balance + pending == BigInt.zero) {
-          accountsToRemove.add(account);
+      List<String> addressesToRemove = List();
+      event.libraAccountsStates.forEach((s) {
+        String address = LibraHelpers.byteToHex(s.authenticationKey);
+        print('$address: ${s.balance.toString()}');
+        if (s.balance <= BigInt.zero) {
+          addressesToRemove.add(address);
         } else {
-          // Update balance of this item
-          privKeyBalanceMap[account].balance = balItem.balance;
-          privKeyBalanceMap[account].pending = balItem.pending;
+          libraAccountStateMap[address] = s;
         }
       });
-      */
-      accountsToRemove.forEach((String account) {
-        privKeyBalanceMap.remove(account);
+      print('addressesToRemove: $addressesToRemove');
+      addressesToRemove.forEach((String address) {
+        libraAccountStateMap.remove(address);
+        libraAccountMap.remove(address);
       });
-      if (privKeyBalanceMap.length == 0) {
+      if (libraAccountStateMap.length == 0) {
         sl
             .get<UIUtil>()
             .showSnackbar(AppLocalization.of(context).transferNoFunds, context);
         return;
       }
       // Go to confirmation screen
-      EventTaxiImpl.singleton()
-          .fire(TransferConfirmEvent(balMap: privKeyBalanceMap));
+      EventTaxiImpl.singleton().fire(TransferConfirmEvent(
+          libraAccountStateMap: libraAccountStateMap,
+          libraAccountMap: libraAccountMap));
       Navigator.of(context).pop();
     });
 
@@ -269,29 +264,26 @@ class AppTransferOverviewSheet {
       _animationOpen = false;
     }));
     // Get accounts from seed
-    getAccountsFromSeed(context, seed).then((accountsToRequest) {
-      // Make balances request
-      //StateContainer.of(context).requestAccountsStates(accountsToRequest);
+    getAccountsFromSeed(context, seed).then((addressesToRequest) {
+      StateContainer.of(context).requestAccountsStates(addressesToRequest);
     });
   }
 
   /// Get NUM_SWEEP accounts from seed to request balances for
   Future<List<String>> getAccountsFromSeed(
       BuildContext context, String seed) async {
-    List<String> accountsToRequest = List();
-    String privKey;
-    String address;
+    List<String> addressesToRequest = [];
     // Get NUM_SWEEP private keys + accounts from seed
     for (int i = 0; i < NUM_SWEEP; i++) {
-      privKey = await LibraUtil.seedToPrivateInIsolate(seed, i);
-      address = await LibraUtil.seedToAddressInIsolate(seed, i);
+      LibraAccount libraAccount =
+          await LibraUtil.seedToAccountInIsolate(seed, i);
+      String address = libraAccount.getAddress();
       // Don't add this if it is the currently logged in account
-      if (address != StateContainer.of(context).wallet.address) {
-        privKeyBalanceMap.putIfAbsent(
-            address, () => AccountStateItem(privKey: privKey));
-        accountsToRequest.add(address);
+      if (address != null && address != StateContainer.of(context).wallet.address) {
+        libraAccountMap.putIfAbsent(address, () => libraAccount);
+        addressesToRequest.add(address);
       }
     }
-    return accountsToRequest;
+    return addressesToRequest;
   }
 }

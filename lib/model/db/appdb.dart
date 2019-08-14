@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io' as io;
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -30,7 +29,7 @@ class DBHelper {
     """;
   static Database _db;
 
-  DBHelper() {}
+  DBHelper();
 
   Future<Database> get db async {
     if (_db != null) return _db;
@@ -171,16 +170,6 @@ class DBHelper {
         0;
   }
 
-  static Future<List<Account>> setAddressForAccounts(
-      Map<String, dynamic> params) async {
-    List<Account> accounts = params['accounts'];
-    String seed = params['seed'];
-    accounts.forEach((a) {
-      a.address = LibraUtil.seedToAddress({'seed': seed, 'index': a.index});
-    });
-    return accounts;
-  }
-
   // Accounts
   Future<List<Account>> getAccounts() async {
     var dbClient = await db;
@@ -192,12 +181,11 @@ class DBHelper {
           id: list[i]['id'],
           name: list[i]['name'],
           index: list[i]['acct_index'],
+          address: list[i]['address'],
           lastAccess: list[i]['last_accessed'],
           selected: list[i]['selected'] == 1 ? true : false,
           balance: list[i]['balance']));
     }
-    accounts = await compute(setAddressForAccounts,
-        {'seed': await sl.get<Vault>().getSeed(), 'accounts': accounts});
     return accounts;
   }
 
@@ -212,12 +200,11 @@ class DBHelper {
           id: list[i]['id'],
           name: list[i]['name'],
           index: list[i]['acct_index'],
+          address: list[i]['address'],
           lastAccess: list[i]['last_accessed'],
           selected: list[i]['selected'] == 1 ? true : false,
           balance: list[i]['balance']));
     }
-    accounts = await compute(setAddressForAccounts,
-        {'seed': await sl.get<Vault>().getSeed(), 'accounts': accounts});
     return accounts;
   }
 
@@ -244,7 +231,8 @@ class DBHelper {
           lastAccess: 0,
           selected: false,
           address: await LibraUtil.seedToAddressInIsolate(
-              await sl.get<Vault>().getSeed(), nextIndex));
+              await sl.get<Vault>().getSeed(),
+              index: nextIndex));
       await txn.rawInsert(
           'INSERT INTO Accounts (name, acct_index, last_accessed, selected, address) values(?, ?, ?, ?, ?)',
           [
@@ -267,12 +255,13 @@ class DBHelper {
   Future<int> saveAccount(Account account) async {
     var dbClient = await db;
     return await dbClient.rawInsert(
-        'INSERT INTO Accounts (name, acct_index, last_accessed, selected) values(?, ?, ?, ?)',
+        'INSERT INTO Accounts (name, acct_index, last_accessed, selected, address) values(?, ?, ?, ?, ?)',
         [
           account.name,
           account.index,
           account.lastAccess,
-          account.selected ? 1 : 0
+          account.selected ? 1 : 0,
+          account.address
         ]);
   }
 
@@ -296,11 +285,28 @@ class DBHelper {
     });
   }
 
-  Future<void> updateAccountBalance(Account account, String balance) async {
+  Future<void> updateAccountBalance(String address, String balance) async {
     var dbClient = await db;
     return await dbClient.rawUpdate(
-        'UPDATE Accounts set balance = ? where acct_index = ?',
-        [balance, account.index]);
+        'UPDATE Accounts set balance = ? where address = ?',
+        [balance, address]);
+  }
+
+  Future<Account> getAccount(String address) async {
+    var dbClient = await db;
+    List<Map> list = await dbClient
+        .rawQuery('SELECT * FROM Accounts where address = ?', [address]);
+    if (list.length == 0) {
+      return null;
+    }
+    return Account(
+        id: list[0]['id'],
+        name: list[0]['name'],
+        index: list[0]['acct_index'],
+        selected: list[0]['selected'] == 1 ? true : false,
+        lastAccess: list[0]['last_accessed'],
+        balance: list[0]['balance'],
+        address: list[0]['address']);
   }
 
   Future<Account> getSelectedAccount() async {
@@ -310,8 +316,6 @@ class DBHelper {
     if (list.length == 0) {
       return null;
     }
-    String address = await LibraUtil.seedToAddressInIsolate(
-        await sl.get<Vault>().getSeed(), list[0]['acct_index']);
     Account account = Account(
         id: list[0]['id'],
         name: list[0]['name'],
@@ -319,7 +323,7 @@ class DBHelper {
         selected: true,
         lastAccess: list[0]['last_accessed'],
         balance: list[0]['balance'],
-        address: address);
+        address: list[0]['address']);
     return account;
   }
 
@@ -330,8 +334,6 @@ class DBHelper {
     if (list.length == 0) {
       return null;
     }
-    String address = await LibraUtil.seedToAddressInIsolate(
-        await sl.get<Vault>().getSeed(), list[0]['acct_index']);
     Account account = Account(
         id: list[0]['id'],
         name: list[0]['name'],
@@ -339,7 +341,7 @@ class DBHelper {
         selected: true,
         lastAccess: list[0]['last_accessed'],
         balance: list[0]['balance'],
-        address: address);
+        address: list[0]['address']);
     return account;
   }
 

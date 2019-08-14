@@ -28,7 +28,7 @@ class Address {
   }
 
   bool isValid() {
-    return _address != null;
+    return _address != null && _address.length == 64; // TODO: move check valid address in libra core
   }
 
   void _parseAddressString(String value) {
