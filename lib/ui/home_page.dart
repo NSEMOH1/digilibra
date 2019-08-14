@@ -217,17 +217,16 @@ class _AppHomePageState extends State<AppHomePage>
     _historySub = EventTaxiImpl.singleton()
         .registerTo<HistoryHomeEvent>()
         .listen((event) {
+      String address = StateContainer.of(context).wallet.address;
       if (event.items == null ||
           event.items.length == 0 ||
-          _historyListMap[StateContainer.of(context).wallet.address] == null)
-        return;
+          _historyListMap[address] == null) return;
       setState(() {
-        _historyListMap[StateContainer.of(context).wallet.address] =
-            ListModel<TransactionResponseItem>(
-          listKey: _listKeyMap[StateContainer.of(context).wallet.address],
-          initialItems: event.items,
-        );
-
+        event.items
+            .where((item) => !_historyListMap[address].items.contains(item))
+            .forEach((historyItem) {
+          _historyListMap[address].insertAtTop(historyItem);
+        });
         _isRefreshing = false;
       });
     });
@@ -447,15 +446,14 @@ class _AppHomePageState extends State<AppHomePage>
       _disposeAnimation();
     }
     // Setup history list
-    if (!_listKeyMap.containsKey(StateContainer.of(context).wallet.address)) {
-      _listKeyMap.putIfAbsent(StateContainer.of(context).wallet.address,
-          () => GlobalKey<AnimatedListState>());
+    var address = StateContainer.of(context).wallet.address;
+    if (!_listKeyMap.containsKey(address)) {
+      _listKeyMap.putIfAbsent(address, () => GlobalKey<AnimatedListState>());
       setState(() {
         _historyListMap.putIfAbsent(
-            StateContainer.of(context).wallet.address,
+            address,
             () => ListModel<TransactionResponseItem>(
-                  listKey:
-                      _listKeyMap[StateContainer.of(context).wallet.address],
+                  listKey: _listKeyMap[address],
                   initialItems: StateContainer.of(context).wallet.history,
                 ));
       });
@@ -463,10 +461,9 @@ class _AppHomePageState extends State<AppHomePage>
     return ReactiveRefreshIndicator(
       backgroundColor: StateContainer.of(context).curTheme.backgroundDark,
       child: AnimatedList(
-        key: _listKeyMap[StateContainer.of(context).wallet.address],
+        key: _listKeyMap[address],
         padding: EdgeInsetsDirectional.fromSTEB(0, 5.0, 0, 15.0),
-        initialItemCount:
-            _historyListMap[StateContainer.of(context).wallet.address].length,
+        initialItemCount: _historyListMap[address].length,
         itemBuilder: _buildItem,
       ),
       onRefresh: _refresh,

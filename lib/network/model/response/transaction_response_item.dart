@@ -91,4 +91,6 @@ class TransactionResponseItem {
   factory TransactionResponseItem.fromJson(Map<String, dynamic> json) =>
       _$TransactionResponseItemFromJson(json);
   Map<String, dynamic> toJson() => _$TransactionResponseItemToJson(this);
+
+  bool operator == (o) => o is TransactionResponseItem && o.version == version;
 }
