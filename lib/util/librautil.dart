@@ -42,11 +42,12 @@ class LibraUtil {
         LibraUtil._seedToAddress, {'seed': seed, 'index': index});
   }
 
-  static Future<void> loginAccount(BuildContext context, String seed) async {
+  static Future<String> loginAccount(BuildContext context, String seed) async {
     Account selectedAcct = await sl.get<DBHelper>().getSelectedAccount();
+    String address;
     if (selectedAcct == null) {
       int defaultIndex = 0;
-      String address =
+      address =
           await LibraUtil.seedToAddressInIsolate(seed, index: defaultIndex);
       selectedAcct = Account(
           index: defaultIndex,
@@ -55,8 +56,11 @@ class LibraUtil {
           selected: true,
           address: address);
       await sl.get<DBHelper>().saveAccount(selectedAcct);
+    } else {
+      address = selectedAcct.address;
     }
     StateContainer.of(context).updateWallet(account: selectedAcct);
+    return address;
   }
 
   static Future<List<LibraAccountState>> _getStates(

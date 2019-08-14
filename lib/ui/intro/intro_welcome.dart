@@ -101,7 +101,12 @@ class _IntroWelcomePageState extends State<IntroWelcomePage> {
                             .then((result) {
                           // Update wallet
                           sl.get<DBHelper>().dropAccounts().then((_) {
-                            LibraUtil.loginAccount(context, result).then((_) {
+                            LibraUtil.loginAccount(context, result).then((address) {
+                              int amount = 100000000; // 100 libra to welcome new user
+                              LibraClient client = new LibraClient();
+                              print('mintWithFaucetService..');
+                              client.mintWithFaucetService(address, BigInt.from(amount),
+                                  needWait: false);
                               setState(() {
                                 _isInserting = false;
                               });
