@@ -7,13 +7,13 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:wallet/styles.dart';
 
 class AppShareCard extends StatefulWidget {
-  final GlobalKey key;
+  final GlobalKey sharedKey;
   final Widget avatarSvg;
 
-  AppShareCard(this.key, this.avatarSvg);
+  AppShareCard(this.sharedKey, this.avatarSvg);
 
   @override
-  _AppShareCardState createState() => _AppShareCardState(key, avatarSvg);
+  _AppShareCardState createState() => _AppShareCardState(sharedKey, avatarSvg);
 }
 
 class _AppShareCardState extends State<AppShareCard> {
