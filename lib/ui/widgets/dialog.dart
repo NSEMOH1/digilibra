@@ -117,7 +117,8 @@ class AnimationLoadingOverlay extends ModalRoute<void> {
   Color get barrierColor {
     if (type == AnimationType.TRANSFER_TRANSFERRING ||
         type == AnimationType.TRANSFER_SEARCHING_QR ||
-        type == AnimationType.TRANSFER_SEARCHING_MANUAL) {
+        type == AnimationType.TRANSFER_SEARCHING_MANUAL ||
+        type == AnimationType.GENERIC) {
       return overlay85;
     }
     return overlay70;

@@ -15,6 +15,7 @@ import 'package:wallet/ui/widgets/auto_resize_text.dart';
 import 'package:wallet/ui/widgets/security.dart';
 import 'package:wallet/util/librautil.dart';
 import 'package:wallet/util/sharedprefsutil.dart';
+import 'package:wallet/ui/widgets/dialog.dart';
 
 class IntroImportSeedPage extends StatefulWidget {
   @override
@@ -658,11 +659,10 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                           if (_isInserting) {
                             return;
                           }
-                          setState(() {
-                            _isInserting = true;
-                          });
+                          _isInserting = true;
                           if (_seedMode) {
                             _seedInputFocusNode.unfocus();
+                            _showAnimationLoading();
                             // If seed valid, log them in
                             if (Entropy.isValidEntropy(
                                 _seedInputController.text)) {
@@ -677,9 +677,7 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                   sl.get<DBHelper>().dropAccounts().then((_) {
                                     LibraUtil.loginAccount(context, result)
                                         .then((_) {
-                                      setState(() {
-                                        _isInserting = false;
-                                      });
+                                      Navigator.of(context).pop();
                                       Navigator.of(context).push(
                                           MaterialPageRoute(
                                               builder: (BuildContext context) {
@@ -687,23 +685,22 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                             (_pinEnteredCallback));
                                       }));
                                     }).catchError((onError) {
-                                      setState(() {
-                                        _isInserting = false;
-                                      });
+                                      Navigator.of(context).pop();
                                     });
                                   });
                                 });
                               });
                             } else {
+                              Navigator.of(context).pop();
                               // Display error
                               setState(() {
                                 _showSeedError = true;
-                                _isInserting = false;
                               });
                             }
                           } else {
                             // mnemonic mode
                             _mnemonicFocusNode.unfocus();
+                            _showAnimationLoading();
                             if (Mnemonic.validateMnemonic(
                                 _mnemonicController.text)) {
                               sl
@@ -718,9 +715,7 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                   sl.get<DBHelper>().dropAccounts().then((_) {
                                     LibraUtil.loginAccount(context, result)
                                         .then((_) {
-                                      setState(() {
-                                        _isInserting = false;
-                                      });
+                                      Navigator.of(context).pop();
                                       Navigator.of(context).push(
                                           MaterialPageRoute(
                                               builder: (BuildContext context) {
@@ -728,14 +723,13 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
                                             (_pinEnteredCallback));
                                       }));
                                     }).catchError((onError) {
-                                      setState(() {
-                                        _isInserting = false;
-                                      });
+                                      Navigator.of(context).pop();
                                     });
                                   });
                                 });
                               });
                             } else {
+                              Navigator.of(context).pop();
                               // Show mnemonic error
                               if (_mnemonicController.text.split(' ').length !=
                                   24) {
@@ -785,5 +779,15 @@ class _IntroImportSeedState extends State<IntroImportSeedPage> {
       Navigator.of(context)
           .pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
     });
+  }
+
+  void _showAnimationLoading() {
+    Navigator.of(context).push(AnimationLoadingOverlay(
+        AnimationType.GENERIC,
+        StateContainer.of(context).curTheme.animationOverlayStrong,
+        StateContainer.of(context).curTheme.animationOverlayMedium,
+        onPoppedCallback: () {
+      _isInserting = false;
+    }));
   }
 }

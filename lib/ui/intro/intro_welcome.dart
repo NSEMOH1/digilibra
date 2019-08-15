@@ -11,6 +11,8 @@ import 'package:wallet/ui/widgets/buttons.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:wallet/util/librautil.dart';
 import 'package:wallet/model/db/appdb.dart';
+import 'package:wallet/ui/widgets/dialog.dart';
+import 'package:flare_flutter/flare_controls.dart';
 
 class IntroWelcomePage extends StatefulWidget {
   @override
@@ -20,9 +22,13 @@ class IntroWelcomePage extends StatefulWidget {
 class _IntroWelcomePageState extends State<IntroWelcomePage> {
   var _scaffoldKey = new GlobalKey<ScaffoldState>();
   bool _isInserting = false;
+  final FlareControls _controls = FlareControls();
 
   @override
   Widget build(BuildContext context) {
+    if (_isInserting) {
+      Navigator.of(context).pop();
+    }
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       key: _scaffoldKey,
@@ -48,17 +54,14 @@ class _IntroWelcomePageState extends State<IntroWelcomePage> {
                       child: Stack(
                         children: <Widget>[
                           Center(
-                            child: _isInserting
-                                ? FlareActor('assets/placeholder_animation.flr',
-                                    animation: 'main', fit: BoxFit.contain)
-                                : FlareActor(
-                                    'assets/welcome_animation.flr',
-                                    animation: 'main',
-                                    fit: BoxFit.contain,
-                                    color: StateContainer.of(context)
-                                        .curTheme
-                                        .primary,
-                                  ),
+                            child: FlareActor(
+                              'assets/welcome_animation.flr',
+                              animation: 'main',
+                              fit: BoxFit.contain,
+                              controller: _controls,
+                              color:
+                                  StateContainer.of(context).curTheme.primary,
+                            ),
                           )
                         ],
                       ),
@@ -92,30 +95,37 @@ class _IntroWelcomePageState extends State<IntroWelcomePage> {
                         if (_isInserting) {
                           return;
                         }
-                        setState(() {
-                          _isInserting = true;
-                        });
+                        _isInserting = true;
+                        _controls.play('idle');
+                        Navigator.of(context).push(AnimationLoadingOverlay(
+                            AnimationType.GENERIC,
+                            StateContainer.of(context)
+                                .curTheme
+                                .animationOverlayStrong,
+                            StateContainer.of(context)
+                                .curTheme
+                                .animationOverlayMedium, onPoppedCallback: () {
+                          _isInserting = false;
+                        }));
                         sl
                             .get<Vault>()
                             .setSeed(Entropy.generateEntropy())
                             .then((result) {
                           // Update wallet
                           sl.get<DBHelper>().dropAccounts().then((_) {
-                            LibraUtil.loginAccount(context, result).then((address) {
-                              int amount = 100000000; // 100 libra to welcome new user
+                            LibraUtil.loginAccount(context, result)
+                                .then((address) {
+                              int amount =
+                                  100000000; // 100 libra to welcome new user
                               LibraClient client = new LibraClient();
-                              print('mintWithFaucetService..');
-                              client.mintWithFaucetService(address, BigInt.from(amount),
+                              client.mintWithFaucetService(
+                                  address, BigInt.from(amount),
                                   needWait: false);
-                              setState(() {
-                                _isInserting = false;
-                              });
+                              Navigator.of(context).pop();
                               Navigator.of(context)
                                   .pushNamed('/intro_backup_safety');
                             }).catchError((onError) {
-                              setState(() {
-                                _isInserting = false;
-                              });
+                              Navigator.of(context).pop();
                             });
                           });
                         });
