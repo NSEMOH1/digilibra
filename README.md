@@ -3,7 +3,7 @@
 ## Building
 
 Android (armeabi-v7a): `flutter build apk`
-Android (arm64-v8a): `flutter build apk --target=android-arm64`
+Android (arm64-v8a): `flutter build apk --target-platform android-arm64`
 iOS: `flutter build ios`
 
 ### Update translations:

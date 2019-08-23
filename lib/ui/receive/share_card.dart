@@ -88,7 +88,7 @@ class _AppShareCardState extends State<AppShareCard> {
                         children: [
                           // Currency Icon
                           TextSpan(
-                            text: ' ',
+                            text: '',
                             style: TextStyle(
                               color: color,
                               fontFamily: 'AppIcons',
@@ -97,7 +97,7 @@ class _AppShareCardState extends State<AppShareCard> {
                             ),
                           ),
                           TextSpan(
-                            text: 'LIBRA',
+                            text: '  EXCALIBRA',
                             style: TextStyle(
                               color: color,
                               fontFamily: 'NeueHansKendrick',
@@ -214,7 +214,7 @@ class _AppShareCardState extends State<AppShareCard> {
                     width: 97,
                     margin: EdgeInsets.only(bottom: 12),
                     child: AutoSizeText(
-                      '\$LIBRA      LIBRA.ORG',
+                      '\$LIBRA    DIGINEX.COM',
                       minFontSize: 1.0,
                       stepGranularity: 0.1,
                       maxLines: 1,
