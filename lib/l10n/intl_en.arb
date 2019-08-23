@@ -270,7 +270,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "welcomeText": "Welcome to Libra. To begin you may create a new wallet or import an existing one.",
+  "welcomeText": "Welcome to ExCalibra. To begin you may create a new wallet or import an existing one.",
   "@welcomeText": {
     "description": "intro_welcome_title",
     "type": "text",
@@ -432,13 +432,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "shareLibra": "Share Libra",
+  "shareLibra": "Share ExCalibra",
   "@shareLibra": {
     "description": "settings_share",
     "type": "text",
     "placeholders": {}
   },
-  "shareLibraText": "Check out Libra wallet!",
+  "shareLibraText": "Check out ExCalibra wallet!",
   "@shareLibraText": {
     "description": "share_extra",
     "type": "text",
@@ -540,7 +540,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "libraWallet": "Libra Wallet",
+  "libraWallet": "ExCalibra Wallet",
   "@libraWallet": {
     "description": "libra_wallet",
     "type": "text",
@@ -582,7 +582,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "transferIntro": "This process will transfer the funds from a paper wallet to your Libra wallet.\n\nTap the \"%1\" button to start.",
+  "transferIntro": "This process will transfer the funds from a paper wallet to your ExCalibra wallet.\n\nTap the \"%1\" button to start.",
   "@transferIntro": {
     "description": "transfer_intro",
     "type": "text",
@@ -630,7 +630,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "transferComplete": "%1 LIBRA successfully transferred to your Libra Wallet.\n",
+  "transferComplete": "%1 LIBRA successfully transferred to your ExCalibra Wallet.\n",
   "@transferComplete": {
     "description": "transfer_complete_text",
     "type": "text",
@@ -648,13 +648,13 @@
     "type": "text",
     "placeholders": {}
   },
-  "unlockPin": "Enter PIN to Unlock Libra",
+  "unlockPin": "Enter PIN to Unlock ExCalibra",
   "@unlockPin": {
     "description": "unlock_libra_pin",
     "type": "text",
     "placeholders": {}
   },
-  "unlockBiometrics": "Authenticate to Unlock Libra",
+  "unlockBiometrics": "Authenticate to Unlock ExCalibra",
   "@unlockBiometrics": {
     "description": "unlock_libra_bio",
     "type": "text",
@@ -714,7 +714,7 @@
     "type": "text",
     "placeholders": {}
   },
-  "exampleCardIntro": "Welcome to Libra. Once you receive LIBRA, transactions will show up like this:",
+  "exampleCardIntro": "Welcome to ExCalibra. Once you receive LIBRA, transactions will show up like this:",
   "@exampleCardIntro": {
     "description": "example_card_intro",
     "type": "text",
