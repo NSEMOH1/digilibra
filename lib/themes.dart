@@ -72,7 +72,7 @@ abstract class BaseTheme {
 }
 
 class LibraTheme extends BaseTheme {
-  static const purple = Color(0xFF42318C);
+  static const main = Color(0xFFCC2431);
 
   static const green = Color(0xFF66BB6A);
 
@@ -80,19 +80,19 @@ class LibraTheme extends BaseTheme {
 
   static const white = Color(0xFFFFFFFF);
 
-  static const grey = Color(0xFF454350);
+  static const grey = Color(0xFF420C10);
 
   static const black = Color(0xFF000000);
 
-  static const veryDarkPurple = Color(0xFF1D135C);
+  static const deepMain = Color(0xFF710D15);
 
-  Color primary = purple;
-  Color primary60 = purple.withOpacity(0.6);
-  Color primary45 = purple.withOpacity(0.45);
-  Color primary30 = purple.withOpacity(0.3);
-  Color primary20 = purple.withOpacity(0.2);
-  Color primary15 = purple.withOpacity(0.15);
-  Color primary10 = purple.withOpacity(0.1);
+  Color primary = main;
+  Color primary60 = main.withOpacity(0.6);
+  Color primary45 = main.withOpacity(0.45);
+  Color primary30 = main.withOpacity(0.3);
+  Color primary20 = main.withOpacity(0.2);
+  Color primary15 = main.withOpacity(0.15);
+  Color primary10 = main.withOpacity(0.1);
 
   Color success = green;
   Color success60 = green.withOpacity(0.6);
@@ -137,11 +137,11 @@ class LibraTheme extends BaseTheme {
       SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent);
 
   BoxShadow boxShadow = BoxShadow(
-      color: veryDarkPurple.withOpacity(0.1),
+      color: deepMain.withOpacity(0.1),
       offset: Offset(0, 5),
       blurRadius: 15);
   BoxShadow boxShadowButton = BoxShadow(
-      color: veryDarkPurple.withOpacity(0.2),
+      color: deepMain.withOpacity(0.2),
       offset: Offset(0, 5),
       blurRadius: 15);
 
