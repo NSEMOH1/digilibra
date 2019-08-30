@@ -34,8 +34,7 @@ class FileUtil {
     if (!await file.exists()) {
       return false;
     }
-    RegExp svgRegex = RegExp(
-        r'/^\s*(?:<\?xml[^>]*>\s*)?(?:<!doctype svg[^>]*\s*(?:\[?(?:\s*<![^>]*>\s*)*\]?)*[^>]*>\s*)?<svg[^>]*>[^]*<\/svg>\s*$/i');
+    RegExp svgRegex = RegExp('<svg[^>]*>[^]*<\/svg>');
     // Read file as string
     String svgContents = await file.readAsString();
     if (svgRegex.hasMatch(svgContents)) {

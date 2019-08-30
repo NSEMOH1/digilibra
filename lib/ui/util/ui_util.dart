@@ -411,7 +411,7 @@ class UIUtil {
       BuildContext context, String address) async {
     // Get expected path
     String dir = (await getApplicationDocumentsDirectory()).path;
-    String fileName = '$dir/$address.png';
+    String fileName = '$dir/$address.svg';
     String url = AppLocalization.of(context).getAvatarDownloadUrl(address);
     return await compute(
         _downloadOrRetrieveAvatar, {'fileName': fileName, 'url': url});

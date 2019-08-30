@@ -369,6 +369,8 @@ class _ContactsListState extends State<ContactsList> {
   }
 
   Widget _buildSingleContact(BuildContext context, Contact contact) {
+    double smallRadius = 48;
+    double radius = smallScreen(context) ? 55 : 70;
     return FlatButton(
       highlightColor: StateContainer.of(context).curTheme.text15,
       splashColor: StateContainer.of(context).curTheme.text15,
@@ -391,10 +393,11 @@ class _ContactsListState extends State<ContactsList> {
             children: <Widget>[
               // avatar
               Container(
-                  width: smallScreen(context) ? 55 : 70,
-                  height: smallScreen(context) ? 55 : 70,
+                  width: radius,
+                  height: radius,
                   child: AvatarWidget(
                     address: contact.address,
+                    radius: smallRadius
                   )),
               //Contact info
               Container(

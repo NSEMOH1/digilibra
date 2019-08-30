@@ -877,7 +877,7 @@ class AppLocalization {
   }
 
   String getAvatarDownloadUrl(String account) {
-    return 'https://robohash.org/$account?gravatar=yes';
+    return 'https://avatars.dicebear.com/v2/human/$account.svg';
   }
   /// -- END NON-TRANSLATABLE ITEMS
 }

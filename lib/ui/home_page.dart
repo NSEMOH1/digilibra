@@ -39,6 +39,7 @@ import 'package:wallet/network/model/response/transaction_response_item.dart';
 import 'package:wallet/ui/widgets/list_slidable.dart';
 import 'package:wallet/constants.dart';
 import 'package:wallet/ui/send/send_complete_sheet.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AppHomePage extends StatefulWidget {
   @override
@@ -69,9 +70,12 @@ class _AppHomePageState extends State<AppHomePage>
 
   // avatar widget
   Widget _avatar;
+  double _avatarRadius = 90.0;
   Widget _largeAvatar;
+  double _largeAvatarRadius = 80.0;
   bool _avatarOverlayOpen = false;
   bool _avatarDownloadTriggered = false;
+
   // List of contacts (Store it so we only have to query the DB once for transaction cards)
   List<Contact> _contacts = List();
 
@@ -86,6 +90,7 @@ class _AppHomePageState extends State<AppHomePage>
   ActorAnimation _sendSlideReleaseAnimation;
   double _fanimationPosition;
   bool releaseAnimation = false;
+  
 
   void initialize(FlutterActorArtboard actor) {
     _fanimationPosition = 0.0;
@@ -284,11 +289,11 @@ class _AppHomePageState extends State<AppHomePage>
           .downloadOrRetrieveAvatar(context, event.account.address)
           .then((result) {
         if (result != null) {
-          sl.get<FileUtil>().pngHasValidSignature(result).then((valid) {
+          sl.get<FileUtil>().isValidSVG(result).then((valid) {
             if (valid) {
               setState(() {
-                _avatar = Image.file(result);
-                _largeAvatar = Image.file(result);
+                _avatar = SvgPicture.file(result, width: _avatarRadius, height: _avatarRadius);
+                _largeAvatar = SvgPicture.file(result, width: _largeAvatarRadius, height: _largeAvatarRadius);
               });
             }
           });
@@ -525,10 +530,10 @@ class _AppHomePageState extends State<AppHomePage>
               context, StateContainer.of(context).wallet.address)
           .then((result) {
         if (result != null) {
-          sl.get<FileUtil>().pngHasValidSignature(result).then((valid) {
+          sl.get<FileUtil>().isValidSVG(result).then((valid) {
             if (valid) {
               setState(() {
-                _avatar = Image.file(result);
+                _avatar = SvgPicture.file(result, width: _avatarRadius, height: _avatarRadius);
               });
             }
           });
@@ -1239,7 +1244,7 @@ class _AppHomePageState extends State<AppHomePage>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           Container(
-            width: 90.0,
+            width: _avatarRadius,
             height: 120,
             alignment: AlignmentDirectional(-1, -1),
             child: Container(
@@ -1262,8 +1267,8 @@ class _AppHomePageState extends State<AppHomePage>
           ),
           _getBalanceWidget(context),
           Container(
-            width: 90.0,
-            height: 90.0,
+            width: _avatarRadius,
+            height: _avatarRadius,
             child: _avatar == null
                 ? _avatar = FlareActor('assets/placeholder_animation.flr',
                     animation: 'main', fit: BoxFit.contain)
@@ -1274,11 +1279,14 @@ class _AppHomePageState extends State<AppHomePage>
                         ? SizedBox()
                         : Stack(children: <Widget>[
                             Container(
-                                width: 80, height: 80, child: _largeAvatar),
+                                width: _largeAvatarRadius,
+                                height: _largeAvatarRadius,
+                                child: _largeAvatar
+                            ),
                             Center(
                               child: Container(
-                                width: 90,
-                                height: 90,
+                                width: _avatarRadius,
+                                height: _avatarRadius,
                                 color: StateContainer.of(context)
                                     .curTheme
                                     .backgroundDark,
@@ -1290,6 +1298,8 @@ class _AppHomePageState extends State<AppHomePage>
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100.0)),
                     onPressed: () {
+                      print('_avatarOverlayOpen: $_avatarOverlayOpen');
+                      print('_largeAvatar: $_largeAvatar');
                       if (_avatarOverlayOpen || _largeAvatar == null) {
                         return;
                       }

@@ -336,6 +336,8 @@ class _AppAccountsWidgetState extends State<AppAccountsWidget> {
 
   Widget _buildAccountListItem(
       BuildContext context, Account account, StateSetter setState) {
+    double smallRadius = 48;
+    double radius = smallScreen(context) ? 55 : 70;
     return Slidable(
       secondaryActions: _getSlideActionsForAccount(context, account, setState),
       actionExtentRatio: 0.24,
@@ -386,10 +388,11 @@ class _AppAccountsWidgetState extends State<AppAccountsWidget> {
                       children: <Widget>[
                         // Account Icon
                         Container(
-                            width: smallScreen(context) ? 55 : 70,
-                            height: smallScreen(context) ? 55 : 70,
+                            width: radius,
+                            height: radius,
                             child: AvatarWidget(
                               address: account.address,
+                              radius: smallRadius,
                             )),
                         // Account name and address
                         Container(

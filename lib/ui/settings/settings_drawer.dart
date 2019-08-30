@@ -505,6 +505,9 @@ class _SettingsSheetState extends State<SettingsSheet>
   }
 
   Widget buildMainSettings(BuildContext context) {
+    double smallRadius = 48;
+    double radius = smallScreen(context) ? 55 : 70;
+    double largeRadius = smallScreen(context) ? 63 : 78;
     return Container(
       decoration: BoxDecoration(
         color: StateContainer.of(context).curTheme.backgroundDark,
@@ -534,8 +537,8 @@ class _SettingsSheetState extends State<SettingsSheet>
                           children: <Widget>[
                             Center(
                               child: Container(
-                                width: smallScreen(context) ? 63 : 78,
-                                height: smallScreen(context) ? 63 : 78,
+                                width: largeRadius,
+                                height: largeRadius,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
@@ -551,20 +554,21 @@ class _SettingsSheetState extends State<SettingsSheet>
                               child: Padding(
                                 padding: EdgeInsets.all(4.0),
                                 child: Container(
-                                    width: smallScreen(context) ? 55 : 70,
-                                    height: smallScreen(context) ? 55 : 70,
+                                    width: radius,
+                                    height: radius,
                                     alignment: AlignmentDirectional(0.5, 0.5),
                                     child: AvatarWidget(
                                       address: StateContainer.of(context)
                                           .wallet
                                           .address,
+                                      radius: radius
                                     )),
                               ),
                             ),
                             Center(
                               child: Container(
-                                width: smallScreen(context) ? 63 : 78,
-                                height: smallScreen(context) ? 63 : 78,
+                                width: largeRadius,
+                                height: largeRadius,
                                 child: FlatButton(
                                   highlightColor: StateContainer.of(context)
                                       .curTheme
@@ -576,8 +580,8 @@ class _SettingsSheetState extends State<SettingsSheet>
                                       .withOpacity(0.75),
                                   padding: EdgeInsets.all(0.0),
                                   child: SizedBox(
-                                    width: smallScreen(context) ? 63 : 78,
-                                    height: smallScreen(context) ? 63 : 78,
+                                    width: largeRadius,
+                                    height: largeRadius,
                                   ),
                                   onPressed: () {
                                     AccountDetailsSheet(
@@ -602,19 +606,20 @@ class _SettingsSheetState extends State<SettingsSheet>
                                     children: <Widget>[
                                       Center(
                                         child: Container(
-                                            width: 48,
-                                            height: 48,
+                                            width: smallRadius,
+                                            height: smallRadius,
                                             child: AvatarWidget(
                                               address:
                                                   StateContainer.of(context)
                                                       .recentLast
                                                       .address,
+                                                  radius: smallRadius,
                                             )),
                                       ),
                                       Center(
                                         child: Container(
-                                          width: 48,
-                                          height: 48,
+                                          width: smallRadius,
+                                          height: smallRadius,
                                           color: Colors.transparent,
                                           child: FlatButton(
                                             onPressed: () {
@@ -643,8 +648,8 @@ class _SettingsSheetState extends State<SettingsSheet>
                                                     .withOpacity(0.75),
                                             padding: EdgeInsets.all(0.0),
                                             child: Container(
-                                              width: 48,
-                                              height: 48,
+                                              width: smallRadius,
+                                              height: smallRadius,
                                               color: Colors.transparent,
                                             ),
                                           ),
@@ -662,19 +667,20 @@ class _SettingsSheetState extends State<SettingsSheet>
                                     children: <Widget>[
                                       Center(
                                         child: Container(
-                                            width: 48,
-                                            height: 48,
+                                            width: smallRadius,
+                                            height: smallRadius,
                                             child: AvatarWidget(
                                               address:
                                                   StateContainer.of(context)
                                                       .recentSecondLast
                                                       .address,
+                                              radius: smallRadius
                                             )),
                                       ),
                                       Center(
                                         child: Container(
-                                          width: 48,
-                                          height: 48,
+                                          width: smallRadius,
+                                          height: smallRadius,
                                           color: Colors.transparent,
                                           child: FlatButton(
                                             onPressed: () {
@@ -704,8 +710,8 @@ class _SettingsSheetState extends State<SettingsSheet>
                                                     .withOpacity(0.75),
                                             padding: EdgeInsets.all(0.0),
                                             child: Container(
-                                              width: 48,
-                                              height: 48,
+                                              width: smallRadius,
+                                              height: smallRadius,
                                               color: Colors.transparent,
                                             ),
                                           ),

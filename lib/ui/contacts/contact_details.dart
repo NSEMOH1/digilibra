@@ -32,6 +32,7 @@ class ContactDetailsSheet {
   bool _addressCopied = false;
   // Timer reference so we can cancel repeated events
   Timer _addressCopiedTimer;
+  double radius = 50;
 
   mainBottomSheet(BuildContext context) {
     AppSheets.showAppHeightNineSheet(
@@ -50,8 +51,8 @@ class ContactDetailsSheet {
                     children: <Widget>[
                       // Trashcan Button
                       Container(
-                        width: 50,
-                        height: 50,
+                        width: radius,
+                        height: radius,
                         margin:
                             EdgeInsetsDirectional.only(top: 10.0, start: 10.0),
                         child: FlatButton(
@@ -76,11 +77,9 @@ class ContactDetailsSheet {
                                 if (deleted) {
                                   // Delete image if exists
                                   if (contact.avatarPath != null) {
-                                    if (File(
-                                            '$documentsDirectory/${contact.avatarPath}')
-                                        .existsSync()) {
-                                      File('$documentsDirectory/${contact.avatarPath}')
-                                          .delete();
+                                    File file = File('$documentsDirectory/${contact.avatarPath}');
+                                    if (file.existsSync()) {
+                                      file.delete();
                                     }
                                   }
                                   EventTaxiImpl.singleton().fire(
@@ -133,8 +132,8 @@ class ContactDetailsSheet {
                       ),
                       // Search Button
                       Container(
-                        width: 50,
-                        height: 50,
+                        width: radius,
+                        height: radius,
                         margin:
                             EdgeInsetsDirectional.only(top: 10.0, end: 10.0),
                         child: FlatButton(
@@ -172,6 +171,7 @@ class ContactDetailsSheet {
                             ? Expanded(
                                 child: AvatarWidget(
                                   address: contact.address,
+                                  radius: double.infinity
                                 ),
                               )
                             : Expanded(
