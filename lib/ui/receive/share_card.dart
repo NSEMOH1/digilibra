@@ -97,7 +97,7 @@ class _AppShareCardState extends State<AppShareCard> {
                             ),
                           ),
                           TextSpan(
-                            text: '  EXCALIBRA',
+                            text: '  DIGILIBRA',
                             style: TextStyle(
                               color: color,
                               fontFamily: 'NeueHansKendrick',

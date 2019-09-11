@@ -252,7 +252,7 @@
         "type": "text",
         "placeholders": {}
     },
-    "welcomeText": "欢迎来到ExCalibra。下一步，您可以创建新钱包或导入现有钱包",
+    "welcomeText": "欢迎来到DigiLibra。下一步，您可以创建新钱包或导入现有钱包",
     "@welcomeText": {
         "description": "intro_welcome_title",
         "type": "text",
@@ -402,13 +402,13 @@
         "type": "text",
         "placeholders": {}
     },
-    "shareLibra": "分享ExCalibra",
+    "shareLibra": "分享DigiLibra",
     "@shareLibra": {
         "description": "settings_share",
         "type": "text",
         "placeholders": {}
     },
-    "shareLibraText": "来试试ExCalibra钱包！",
+    "shareLibraText": "来试试DigiLibra钱包！",
     "@shareLibraText": {
         "description": "share_extra",
         "type": "text",
@@ -510,7 +510,7 @@
         "type": "text",
         "placeholders": {}
     },
-    "libraWallet": "ExCalibra 钱包",
+    "libraWallet": "DigiLibra 钱包",
     "@libraWallet": {
         "description": "libra_wallet",
         "type": "text",
@@ -552,7 +552,7 @@
         "type": "text",
         "placeholders": {}
     },
-    "transferIntro": "这个过程会将纸钱包的钱币转移到您的 ExCalibra 钱包。\n\n请按 \"%1\" 键开始。",
+    "transferIntro": "这个过程会将纸钱包的钱币转移到您的 DigiLibra 钱包。\n\n请按 \"%1\" 键开始。",
     "@transferIntro": {
         "description": "transfer_intro",
         "type": "text",
@@ -600,7 +600,7 @@
         "type": "text",
         "placeholders": {}
     },
-    "transferComplete": "%1 LIBRA 成功传送到您的 ExCalibra 钱包。\n",
+    "transferComplete": "%1 LIBRA 成功传送到您的 DigiLibra 钱包。\n",
     "@transferComplete": {
         "description": "transfer_complete_text",
         "type": "text",
@@ -612,13 +612,13 @@
         "type": "text",
         "placeholders": {}
     },
-    "unlockPin": "请输入识别码码解锁 ExCalibra",
+    "unlockPin": "请输入识别码码解锁 DigiLibra",
     "@unlockPin": {
         "description": "unlock_libra_pin",
         "type": "text",
         "placeholders": {}
     },
-    "unlockBiometrics": "以生物特征解锁 ExCalibra",
+    "unlockBiometrics": "以生物特征解锁 DigiLibra",
     "@unlockBiometrics": {
         "description": "unlock_libra_bio",
         "type": "text",
@@ -708,7 +708,7 @@
         "type": "text",
         "placeholders": {}
     },
-    "exampleCardIntro": "欢迎来到ExCalibra。当您收到或发送LIBRA时，它将显示在下面.",
+    "exampleCardIntro": "欢迎来到DigiLibra。当您收到或发送LIBRA时，它将显示在下面.",
     "@exampleCardIntro": {
         "description": "example_card_intro",
         "type": "text",

@@ -1,4 +1,4 @@
-package com.libra.wallet;
+package com.diginex.digilibra;
 
 import android.os.Bundle;
 
