@@ -153,7 +153,7 @@ flutter:
      
   assets:
     - assets/qrScanGuide.svg
-    - assets/welcome_animation.flr
+    - assets/welcome_animation.svg
     - assets/send_animation.flr
     - assets/transfer_animation_librawalletonly.flr
     - assets/transfer_animation_paperwalletonly.flr

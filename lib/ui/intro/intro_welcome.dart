@@ -8,7 +8,7 @@ import 'package:wallet/styles.dart';
 import 'package:wallet/localization.dart';
 import 'package:wallet/ui/widgets/auto_resize_text.dart';
 import 'package:wallet/ui/widgets/buttons.dart';
-import 'package:flare_flutter/flare_actor.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wallet/util/librautil.dart';
 import 'package:wallet/model/db/appdb.dart';
 import 'package:wallet/ui/widgets/dialog.dart';
@@ -54,14 +54,10 @@ class _IntroWelcomePageState extends State<IntroWelcomePage> {
                       child: Stack(
                         children: <Widget>[
                           Center(
-                            child: FlareActor(
-                              'assets/welcome_animation.flr',
-                              animation: 'main',
-                              fit: BoxFit.contain,
-                              controller: _controls,
-                              color:
-                                  StateContainer.of(context).curTheme.primary,
-                            ),
+                            child: SvgPicture.asset(
+                                'assets/welcome_animation.svg',
+                                width:
+                                    MediaQuery.of(context).size.width * 0.6),
                           )
                         ],
                       ),
